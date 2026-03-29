@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+
+# Environment variables — never commit these
+.env
+
+# SQLite database — data lives on the server volume, not in git
+*.db
+*.db-shm
+*.db-wal
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+npm-debug.log*
