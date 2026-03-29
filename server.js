@@ -1,8 +1,7 @@
-import { config } from 'dotenv';
-config(); // reads .env from the current working directory (ignored on Railway/Render where env vars are set in the dashboard)
 import express from 'express';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import { existsSync } from 'fs';
 
 import { validate }     from './assistant/validate.js';
 import { buildContext } from './assistant/context.js';
@@ -10,6 +9,14 @@ import { buildPrompt }  from './assistant/prompt.js';
 import { callModel }    from './assistant/model.js';
 import authRoutes       from './auth/routes.js';
 import userRoutes       from './user/routes.js';
+
+// Load .env for local development only.
+// On Railway/Render, env vars are injected natively — no .env file exists there.
+const envFile = new URL('.env', import.meta.url).pathname;
+if (existsSync(envFile)) {
+  const { config } = await import('dotenv');
+  config({ path: envFile });
+}
 
 const app = express();
 app.use(express.json());
