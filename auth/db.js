@@ -1,10 +1,17 @@
 import Database from 'better-sqlite3';
+import { mkdirSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
 const dir    = dirname(fileURLToPath(import.meta.url));
 const dbPath = process.env.DATABASE_PATH || join(dir, '..', 'aureon.db');
-const db     = new Database(dbPath);
+
+// Ensure the directory exists before opening the database.
+// Required on Railway when DATABASE_PATH points to a volume mount (e.g. /data/aureon.db)
+// that may not have been provisioned yet on first deploy.
+mkdirSync(dirname(dbPath), { recursive: true });
+
+const db = new Database(dbPath);
 
 db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');
