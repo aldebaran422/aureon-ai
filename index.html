@@ -1698,58 +1698,103 @@
 
   function setAuthError(msg) {
     const err = document.getElementById('auth-error');
-    if (err) err.textContent = msg;
+    if (err) {
+      err.textContent = msg;
+      // Scroll error into view — it lives at the top of the card which may be off-screen on mobile
+      err.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }
+
+  async function _authRequest(url, body) {
+    console.log('[auth] POST', url, body.email);
+    const r = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    console.log('[auth] status:', r.status);
+    const raw = await r.text();
+    console.log('[auth] raw response:', raw.slice(0, 300));
+    let data;
+    try { data = JSON.parse(raw); }
+    catch(e) {
+      throw new Error(`Server returned non-JSON (${r.status}): ${raw.slice(0, 120)}`);
+    }
+    return { ok: r.ok, status: r.status, data };
   }
 
   async function submitSignup() {
-    console.log('[signup] submitSignup called');
+    console.log('[signup] called');
     const email    = document.getElementById('signup-email')?.value.trim();
     const password = document.getElementById('signup-password')?.value;
     const confirm  = document.getElementById('signup-confirm')?.value;
-    console.log('[signup] email:', email, '| password length:', password?.length);
-    if (!email || !password) return setAuthError('Please fill in all fields.');
-    if (password !== confirm) return setAuthError('Passwords do not match.');
-    if (password.length < 8) return setAuthError('Password must be at least 8 characters.');
+    console.log('[signup] email:', email, 'pwLen:', password?.length);
+
+    if (!email || !password)      return setAuthError('Please fill in all fields.');
+    if (password !== confirm)     return setAuthError('Passwords do not match.');
+    if (password.length < 8)      return setAuthError('Password must be at least 8 characters.');
+
     const btn = document.getElementById('signup-submit-btn');
-    if (btn) btn.disabled = true;
+    if (btn) { btn.disabled = true; btn.textContent = 'Creating account…'; }
     clearAuthError();
+
     try {
-      const r = await fetch('/api/auth/signup', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await r.json();
-      if (!r.ok) { setAuthError(data.error || 'Signup failed.'); return; }
+      const { ok, status, data } = await _authRequest('/api/auth/signup', { email, password });
+      if (!ok) {
+        const msg = data.error || `Signup failed (${status})`;
+        console.error('[signup] error:', msg);
+        setAuthError(msg);
+        showToast('Signup failed', msg, 'warn');
+        return;
+      }
+      console.log('[signup] success');
       setAuthSession(data.token, data.user);
       await syncLocalToServer();
       closeAuthModal();
       renderHome();
+      showToast('Welcome to Aureon', 'Account created — check your email to verify.', 'up');
       if (_authModalCallback) { const cb = _authModalCallback; _authModalCallback = null; cb(); }
-    } catch(e) { setAuthError('Network error. Please try again.'); }
-    finally { if (btn) btn.disabled = false; }
+    } catch(e) {
+      console.error('[signup] exception:', e.message);
+      setAuthError(e.message);
+      showToast('Signup error', e.message, 'warn');
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = 'Create account'; }
+    }
   }
 
   async function submitLogin() {
+    console.log('[login] called');
     const email    = document.getElementById('login-email')?.value.trim();
     const password = document.getElementById('login-password')?.value;
     if (!email || !password) return setAuthError('Please fill in all fields.');
+
     const btn = document.getElementById('login-submit-btn');
-    if (btn) btn.disabled = true;
+    if (btn) { btn.disabled = true; btn.textContent = 'Signing in…'; }
     clearAuthError();
+
     try {
-      const r = await fetch('/api/auth/login', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await r.json();
-      if (!r.ok) { setAuthError(data.error || 'Login failed.'); return; }
+      const { ok, status, data } = await _authRequest('/api/auth/login', { email, password });
+      if (!ok) {
+        const msg = data.error || `Login failed (${status})`;
+        console.error('[login] error:', msg);
+        setAuthError(msg);
+        showToast('Login failed', msg, 'warn');
+        return;
+      }
+      console.log('[login] success');
       setAuthSession(data.token, data.user);
       await syncLocalToServer();
       closeAuthModal();
       renderHome();
       if (_authModalCallback) { const cb = _authModalCallback; _authModalCallback = null; cb(); }
-    } catch(e) { setAuthError('Network error. Please try again.'); }
-    finally { if (btn) btn.disabled = false; }
+    } catch(e) {
+      console.error('[login] exception:', e.message);
+      setAuthError(e.message);
+      showToast('Login error', e.message, 'warn');
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = 'Sign in'; }
+    }
   }
 
   function signOut() {
