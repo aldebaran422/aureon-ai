@@ -1181,6 +1181,37 @@
     .side-menu-disclaimer {
       font-size: 0.64rem; color: rgba(255,255,255,0.28); line-height: 1.6;
     }
+    .side-menu-item.danger       { color: #e05555; }
+    .side-menu-item.danger:hover { background: rgba(224,85,85,0.08); color: #e05555; }
+    .side-menu-item.danger .side-menu-icon { color: #e05555; }
+
+    /* ── Delete-account confirmation modal ── */
+    .delete-account-overlay {
+      display: none; position: fixed; inset: 0; z-index: 9000;
+      background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+      align-items: center; justify-content: center;
+    }
+    .delete-account-overlay.open { display: flex; }
+    .delete-account-card {
+      background: #1a1a1a; border: 1px solid rgba(224,85,85,0.35);
+      border-radius: 16px; padding: 2rem 1.5rem; max-width: 340px; width: 90%;
+      text-align: center;
+    }
+    .delete-account-icon  { font-size: 2.5rem; margin-bottom: 0.75rem; }
+    .delete-account-title { font-size: 1.1rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; }
+    .delete-account-body  { font-size: 0.82rem; color: rgba(255,255,255,0.55); line-height: 1.6; margin-bottom: 1.5rem; }
+    .delete-account-actions { display: flex; gap: 0.75rem; }
+    .delete-account-cancel {
+      flex: 1; padding: 0.7rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.12);
+      background: transparent; color: rgba(255,255,255,0.7); font-size: 0.9rem;
+      cursor: pointer; touch-action: manipulation;
+    }
+    .delete-account-confirm {
+      flex: 1; padding: 0.7rem; border-radius: 8px; border: none;
+      background: #e05555; color: #fff; font-size: 0.9rem; font-weight: 700;
+      cursor: pointer; touch-action: manipulation;
+    }
+    .delete-account-confirm:disabled { opacity: 0.5; }
 
     /* ── Bell button & unread badge ── */
     .home-header-row {
@@ -4603,6 +4634,14 @@
         '</div>' +
         '<span class="side-menu-chevron">›</span>' +
       '</button>' +
+      '<div class="side-menu-divider" id="delete-account-divider" style="display:none"></div>' +
+      '<button class="side-menu-item danger" id="delete-account-menu-btn" style="display:none" onclick="closeSideMenu(); openDeleteAccountModal();">' +
+        '<div class="side-menu-icon">🗑️</div>' +
+        '<div class="side-menu-item-meta">' +
+          '<span class="side-menu-item-label">Delete Account</span>' +
+          '<span class="side-menu-item-sub">Permanently remove all your data</span>' +
+        '</div>' +
+      '</button>' +
     '</nav>' +
     '<div class="side-menu-footer">' +
       '<p class="side-menu-disclaimer">Aureon provides market data and AI analysis for informational purposes only. Nothing here constitutes financial advice. Always do your own research before making investment decisions.</p>' +
@@ -4610,8 +4649,10 @@
   document.body.appendChild(sideMenu);
 
   function openSideMenu() {
-    const label = document.getElementById('menu-auth-label');
-    const sub   = document.getElementById('menu-auth-sub');
+    const label     = document.getElementById('menu-auth-label');
+    const sub       = document.getElementById('menu-auth-sub');
+    const deleteBtn = document.getElementById('delete-account-menu-btn');
+    const deleteDiv = document.getElementById('delete-account-divider');
     if (label && sub) {
       if (authUser) {
         label.textContent = authUser.email;
@@ -4620,6 +4661,11 @@
         label.textContent = 'Sign In';
         sub.textContent   = 'Create or access your profile';
       }
+    }
+    if (deleteBtn && deleteDiv) {
+      const show = !!authUser;
+      deleteBtn.style.display = show ? '' : 'none';
+      deleteDiv.style.display = show ? '' : 'none';
     }
     sideMenuOverlay.classList.add('open');
     sideMenu.classList.add('open');
@@ -4635,6 +4681,58 @@
   // Close on Escape key
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && sideMenu.classList.contains('open')) closeSideMenu();
+  });
+
+  // ── Delete Account modal ──────────────────────────────────────────────────────
+  const deleteAccountOverlay = document.createElement('div');
+  deleteAccountOverlay.id        = 'delete-account-overlay';
+  deleteAccountOverlay.className = 'delete-account-overlay';
+  deleteAccountOverlay.innerHTML =
+    '<div class="delete-account-card">' +
+      '<div class="delete-account-icon">⚠️</div>' +
+      '<div class="delete-account-title">Delete your account?</div>' +
+      '<p class="delete-account-body">This will permanently delete your account, alerts, and all saved data. This cannot be undone.</p>' +
+      '<div class="delete-account-actions">' +
+        '<button class="delete-account-cancel" onclick="closeDeleteAccountModal()">Cancel</button>' +
+        '<button class="delete-account-confirm" id="delete-account-confirm-btn" onclick="confirmDeleteAccount()">Delete</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(deleteAccountOverlay);
+
+  function openDeleteAccountModal() {
+    if (!authUser) return;
+    deleteAccountOverlay.classList.add('open');
+  }
+
+  function closeDeleteAccountModal() {
+    deleteAccountOverlay.classList.remove('open');
+    const btn = document.getElementById('delete-account-confirm-btn');
+    if (btn) { btn.disabled = false; btn.textContent = 'Delete'; }
+  }
+
+  async function confirmDeleteAccount() {
+    const btn = document.getElementById('delete-account-confirm-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Deleting…'; }
+    try {
+      const token = localStorage.getItem('aureon-token');
+      const r = await fetch('/api/auth/account', {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + token },
+      });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(data.error || 'Delete failed');
+      closeDeleteAccountModal();
+      clearAuthSession();
+      renderHome();
+      showToast('Account deleted', 'Your account and all data have been removed.', 'info');
+    } catch(e) {
+      closeDeleteAccountModal();
+      showToast('Error', e.message, 'warn');
+    }
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && deleteAccountOverlay.classList.contains('open')) closeDeleteAccountModal();
   });
 
   const disclaimerOverlay = document.createElement('div');

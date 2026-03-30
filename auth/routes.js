@@ -145,4 +145,17 @@ router.post('/resend-verification', requireAuth, async (req, res) => {
   res.json({ ok: true });
 });
 
+// ── DELETE /api/auth/account ──────────────────────────────────────────────────
+// Permanently deletes the authenticated user and all their data.
+router.delete('/account', requireAuth, (req, res) => {
+  const user = db.prepare('SELECT id, email FROM users WHERE id = ?').get(req.userId);
+  if (!user) return res.status(404).json({ error: 'User not found' });
+
+  // Cascading deletes handle user_data and portfolio_holdings (ON DELETE CASCADE)
+  db.prepare('DELETE FROM users WHERE id = ?').run(req.userId);
+
+  console.log(`[auth] Account deleted: user ${req.userId} (${user.email})`);
+  res.json({ ok: true });
+});
+
 export default router;
