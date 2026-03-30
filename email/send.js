@@ -55,7 +55,7 @@ export async function sendVerificationEmail({ to, token, baseUrl }) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from:    process.env.EMAIL_FROM || 'Aureon <noreply@resend.dev>',
+        from:    process.env.EMAIL_FROM || 'Aureon <onboarding@resend.dev>',
         to,
         subject: 'Verify your Aureon account',
         html:    verificationHtml(verifyUrl),

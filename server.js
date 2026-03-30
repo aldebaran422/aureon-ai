@@ -21,7 +21,9 @@ import userRoutes       from './user/routes.js';
 // ── Startup diagnostics ───────────────────────────────────────────────────────
 console.log('[startup] ANTHROPIC_API_KEY present:', !!process.env.ANTHROPIC_API_KEY);
 console.log('[startup] JWT_SECRET present:        ', !!process.env.JWT_SECRET);
-console.log('[startup] DATABASE_PATH:             ', process.env.DATABASE_PATH);
+console.log('[startup] DATABASE_PATH:             ', process.env.DATABASE_PATH || '(not set — using local aureon.db)');
+console.log('[startup] EMAIL_FROM:                ', process.env.EMAIL_FROM    || '(not set — using default)');
+console.log('[startup] RESEND_API_KEY present:    ', !!process.env.RESEND_API_KEY);
 
 // Load .env for local development only.
 // On Railway/Render, env vars are injected natively — no .env file exists there.

@@ -1,0 +1,16 @@
+[build]
+builder = "nixpacks"
+
+[deploy]
+startCommand = "node server.js"
+healthcheckPath = "/"
+healthcheckTimeout = 30
+
+# ── Persistent volume ──────────────────────────────────────────────────────────
+# In the Railway dashboard:
+#   1. Go to your service → Volumes → Add Volume
+#   2. Mount path: /data
+#   3. Set environment variable: DATABASE_PATH=/data/aureon.db
+#
+# Without the volume, Railway's ephemeral filesystem wipes aureon.db on every
+# redeploy. The volume survives redeployments and service restarts.

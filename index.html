@@ -1647,16 +1647,22 @@
     if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
     try {
       const r = await authFetch('/api/auth/resend-verification', { method: 'POST' });
-      const d = await r.json();
+      const d = await r.json().catch(() => ({}));
       if (r.ok) {
         showToast('Email sent', 'Check your inbox for a new verification link.', 'info');
         if (btn) btn.textContent = 'Sent ✓';
+      } else if (r.status === 404 || r.status === 401) {
+        // Stale session — user no longer exists in DB (e.g. after a redeploy wiped the DB).
+        // Clear local session and prompt them to sign up again.
+        clearAuthSession();
+        renderHome();
+        showToast('Session expired', 'Please sign in or create a new account.', 'warn');
       } else {
-        showToast('Error', d.error || 'Could not send email', 'warn');
+        showToast('Could not send email', d.error || 'Please try again.', 'warn');
         if (btn) { btn.disabled = false; btn.textContent = 'Resend email'; }
       }
     } catch(e) {
-      showToast('Error', 'Network error — try again', 'warn');
+      showToast('Network error', 'Check your connection and try again.', 'warn');
       if (btn) { btn.disabled = false; btn.textContent = 'Resend email'; }
     }
   }
