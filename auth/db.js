@@ -16,15 +16,6 @@ const db = new Database(dbPath);
 db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');
 
-// ── Safe column migrations (ignored if columns already exist) ─────────────────
-for (const sql of [
-  'ALTER TABLE users ADD COLUMN verified_at INTEGER',
-  'ALTER TABLE users ADD COLUMN verification_token TEXT',
-  'ALTER TABLE users ADD COLUMN verification_token_expires INTEGER',
-]) {
-  try { db.exec(sql); } catch(e) { /* column already exists */ }
-}
-
 db.exec(`
   CREATE TABLE IF NOT EXISTS users (
     id            INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -52,5 +43,17 @@ db.exec(`
     created_at    INTEGER NOT NULL
   );
 `);
+
+// ── Safe column migrations ─────────────────────────────────────────────────────
+// Runs AFTER CREATE TABLE so the table always exists first.
+// Each ALTER TABLE is silently ignored if the column already exists.
+for (const sql of [
+  'ALTER TABLE users ADD COLUMN verified          INTEGER DEFAULT 0',
+  'ALTER TABLE users ADD COLUMN verified_at       INTEGER',
+  'ALTER TABLE users ADD COLUMN verification_token TEXT',
+  'ALTER TABLE users ADD COLUMN verification_token_expires INTEGER',
+]) {
+  try { db.exec(sql); } catch (e) { /* column already exists — safe to ignore */ }
+}
 
 export default db;
