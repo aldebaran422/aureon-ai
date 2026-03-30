@@ -1910,8 +1910,40 @@
   // Trading chart state (persists across navigation)
   const tvCharts      = {};
   const tvSeries      = {};
-  const CANDLE_COUNTS  = { 1: 120, 5: 576, 15: 672, 60: 720, 240: 720, 1440: 720 };
-  const CANDLE_HISTORY = { 1: '~2h', 5: '~2d', 15: '~7d', 60: '~30d', 240: '~4mo', 1440: '~2yr' };
+  // Binance USDT pairs — null means fall back to Kraken (coin not listed on Binance)
+  const BINANCE_PAIRS = {
+    'ripple':             'XRPUSDT',  'bitcoin':           'BTCUSDT',
+    'ethereum':           'ETHUSDT',  'solana':            'SOLUSDT',
+    'cardano':            'ADAUSDT',  'hedera-hashgraph':  'HBARUSDT',
+    'dogecoin':           'DOGEUSDT', 'chex-token':         null,
+    'chainlink':          'LINKUSDT', 'stellar':           'XLMUSDT',
+    'algorand':           'ALGOUSDT', 'vechain':           'VETUSDT',
+    'avalanche-2':        'AVAXUSDT', 'polkadot':          'DOTUSDT',
+    'matic-network':      'POLUSDT',  'cosmos':            'ATOMUSDT',
+    'litecoin':           'LTCUSDT',  'bitcoin-cash':      'BCHUSDT',
+    'internet-computer':  'ICPUSDT',  'near':              'NEARUSDT',
+    'aptos':              'APTUSDT',  'arbitrum':          'ARBUSDT',
+    'optimism':           'OPUSDT',   'starknet':          'STRKUSDT',
+    'sui':                'SUIUSDT',  'sei-network':       'SEIUSDT',
+    'fantom':             'FTMUSDT',  'aave':              'AAVEUSDT',
+    'maker':              'MKRUSDT',  'curve-dao-token':   'CRVUSDT',
+    'lido-dao':           'LDOUSDT',  'uniswap':           'UNIUSDT',
+    'thorchain':          'RUNEUSDT', 'pepe':              'PEPEUSDT',
+    'dogwifcoin':         'WIFUSDT',  'bonk':              'BONKUSDT',
+    'render-token':       'RENDERUSDT','fetch-ai':         'FETUSDT',
+    'bittensor':          'TAOUSDT',  'the-graph':         'GRTUSDT',
+    'celestia':           'TIAUSDT',  'injective-protocol':'INJUSDT',
+    'kaspa':              'KASUSDT',  'worldcoin-wld':     'WLDUSDT',
+    'the-sandbox':        'SANDUSDT', 'decentraland':      'MANAUSDT',
+    'flow':               'FLOWUSDT', 'filecoin':          'FILUSDT',
+  };
+  // Binance interval strings for each minute-value
+  const BINANCE_IV = { 1: '1m', 5: '5m', 15: '15m', 60: '1h', 240: '4h', 1440: '1d' };
+
+  // How many candles to fetch per timeframe (drives parallel Binance page count)
+  // 1D/4H reach ~5yr; 1H ~1yr; shorter TFs limited by practical chart usability
+  const CANDLE_COUNTS  = { 1: 720, 5: 2016, 15: 2880, 60: 8760, 240: 10950, 1440: 1826 };
+  const CANDLE_HISTORY = { 1: '~12h', 5: '~7d', 15: '~30d', 60: '~1yr', 240: '~5yr', 1440: '~5yr' };
   function tfLabel(iv) {
     return iv === 1 ? '1m' : iv === 5 ? '5m' : iv === 15 ? '15m' : iv === 60 ? '1H' : iv === 240 ? '4H' : '1D';
   }
@@ -2660,7 +2692,7 @@
       const s = document.getElementById('tv-status-' + coin.id);
       if (s) s.innerHTML = '';
     } else {
-      fetchKrakenOHLC(coin.id, tvInterval[coin.id]);
+      fetchOHLC(coin.id, tvInterval[coin.id]);
     }
   }
 
@@ -2754,20 +2786,62 @@
     return result;
   }
 
-  async function fetchKrakenOHLC(coinId, interval) {
+  // Fetch N candles from Binance in parallel pages for deep history
+  async function fetchBinancePaged(symbol, binInterval, totalWanted) {
+    const msPerCandle = { '1m': 60000, '5m': 300000, '15m': 900000,
+                          '1h': 3600000, '4h': 14400000, '1d': 86400000 }[binInterval];
+    const pageSize = 1000;
+    const now      = Date.now();
+    const startMs  = now - totalWanted * msPerCandle;
+    const pages    = Math.ceil(totalWanted / pageSize);
+
+    const fetches = Array.from({ length: pages }, (_, i) => {
+      const s = Math.floor(startMs + i * pageSize * msPerCandle);
+      const e = Math.floor(Math.min(s + pageSize * msPerCandle - 1, now));
+      return fetch('https://api.binance.com/api/v3/klines?symbol=' + symbol +
+        '&interval=' + binInterval + '&startTime=' + s + '&endTime=' + e + '&limit=' + pageSize)
+        .then(r => r.json()).catch(() => []);
+    });
+
+    const results = await Promise.all(fetches);
+    const seen = new Set();
+    const candles = [];
+    for (const data of results) {
+      if (!Array.isArray(data)) continue;
+      for (const d of data) {
+        if (!d || !d[0]) continue;
+        const t = Math.floor(d[0] / 1000); // ms → s
+        if (seen.has(t)) continue;
+        seen.add(t);
+        candles.push({ time: t, open: parseFloat(d[1]), high: parseFloat(d[2]),
+                       low: parseFloat(d[3]), close: parseFloat(d[4]), volume: parseFloat(d[5]) });
+      }
+    }
+    return candles.sort((a, b) => a.time - b.time);
+  }
+
+  // Fetch OHLC — Binance first (deep history), Kraken fallback for unlisted coins
+  async function fetchOHLC(coinId, interval) {
     const coin   = getCoin(coinId);
     const status = document.getElementById('tv-status-' + coinId);
     if (status) status.innerHTML = '<div class="chart-dots"><span></span><span></span><span></span></div>';
     try {
-      const res  = await fetch('https://api.kraken.com/0/public/OHLC?pair=' + coin.krakenPair + '&interval=' + interval);
-      const data = await res.json();
-      if (data.error && data.error.length) throw new Error(data.error[0]);
-      const key     = Object.keys(data.result).find(k => k !== 'last');
-      const candles = data.result[key].map(d => ({
-        time: d[0], open: parseFloat(d[1]), high: parseFloat(d[2]),
-        low: parseFloat(d[3]), close: parseFloat(d[4]), volume: parseFloat(d[6]),
-      })).slice(-(CANDLE_COUNTS[interval] || 720));
-      // Cache per-interval for MTF summary
+      let candles;
+      const bp = BINANCE_PAIRS[coinId];
+      if (bp) {
+        candles = await fetchBinancePaged(bp, BINANCE_IV[interval], CANDLE_COUNTS[interval]);
+        if (!candles.length) throw new Error('No data from Binance');
+      } else {
+        // Kraken fallback (e.g. CHEX)
+        const res  = await fetch('https://api.kraken.com/0/public/OHLC?pair=' + coin.krakenPair + '&interval=' + interval);
+        const data = await res.json();
+        if (data.error && data.error.length) throw new Error(data.error[0]);
+        const key = Object.keys(data.result).find(k => k !== 'last');
+        candles = data.result[key].map(d => ({
+          time: d[0], open: parseFloat(d[1]), high: parseFloat(d[2]),
+          low: parseFloat(d[3]), close: parseFloat(d[4]), volume: parseFloat(d[6]),
+        })).slice(-(CANDLE_COUNTS[interval] || 720));
+      }
       if (!tvAllCandles[coinId]) tvAllCandles[coinId] = {};
       tvAllCandles[coinId][interval] = candles;
       tvLastCandles[coinId] = candles;
@@ -2788,7 +2862,7 @@
     } catch(err) {
       if (status) status.innerHTML =
         '<div class="chart-err">⚠ Failed to load ' +
-        '<button class="retry-btn" onclick="fetchKrakenOHLC(\'' + coinId + '\',' + interval + ')">Retry</button>' +
+        '<button class="retry-btn" onclick="fetchOHLC(\'' + coinId + '\',' + interval + ')">Retry</button>' +
         '</div>';
     }
   }
@@ -2798,7 +2872,7 @@
     tvMarkers[coinId]  = [];
     document.querySelectorAll('.tf-btn[data-coin="' + coinId + '"]').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    fetchKrakenOHLC(coinId, interval);
+    fetchOHLC(coinId, interval);
   }
 
   function addMarker(coinId, type, signal) {
@@ -2855,21 +2929,28 @@
   async function fetchMTFData(coinId) {
     const coin = getCoin(coinId);
     if (!tvAllCandles[coinId]) tvAllCandles[coinId] = {};
-    updateMTFRow(coinId); // show current state immediately
+    updateMTFRow(coinId);
     await Promise.all([1, 5, 1440].map(async iv => {
-      if (tvAllCandles[coinId][iv]) return; // already cached
+      if (tvAllCandles[coinId][iv]) return;
       try {
-        const res  = await fetch('https://api.kraken.com/0/public/OHLC?pair=' + coin.krakenPair + '&interval=' + iv);
-        const data = await res.json();
-        if (data.error && data.error.length) return;
-        const key = Object.keys(data.result).find(k => k !== 'last');
-        tvAllCandles[coinId][iv] = data.result[key].map(d => ({
-          time: d[0], open: parseFloat(d[1]), high: parseFloat(d[2]),
-          low:  parseFloat(d[3]), close: parseFloat(d[4]), volume: parseFloat(d[6]),
-        }));
-        updateMTFRow(coinId); // update as each arrives
-        if (iv === 5) { updateTrend(coinId); checkTrendFlip(coinId); checkRSIAlert(coinId); } // refresh EMA trend + alerts
-        // When BTC 5m loads, refresh correlation chip on whatever coin is open
+        let candles;
+        const bp = BINANCE_PAIRS[coinId];
+        if (bp) {
+          candles = await fetchBinancePaged(bp, BINANCE_IV[iv], CANDLE_COUNTS[iv]);
+          if (!candles.length) throw new Error('empty');
+        } else {
+          const res  = await fetch('https://api.kraken.com/0/public/OHLC?pair=' + coin.krakenPair + '&interval=' + iv);
+          const data = await res.json();
+          if (data.error && data.error.length) throw new Error(data.error[0]);
+          const key = Object.keys(data.result).find(k => k !== 'last');
+          candles = data.result[key].map(d => ({
+            time: d[0], open: parseFloat(d[1]), high: parseFloat(d[2]),
+            low:  parseFloat(d[3]), close: parseFloat(d[4]), volume: parseFloat(d[6]),
+          }));
+        }
+        tvAllCandles[coinId][iv] = candles;
+        updateMTFRow(coinId);
+        if (iv === 5) { updateTrend(coinId); checkTrendFlip(coinId); checkRSIAlert(coinId); }
         if (iv === 5 && coinId === 'bitcoin' && expandedCoin && expandedCoin !== 'bitcoin') {
           updateInsight(expandedCoin);
         }
@@ -3119,7 +3200,7 @@
     } else {
       const st = document.getElementById('exp-status');
       if (st) st.innerHTML = '<div class="chart-dots"><span></span><span></span><span></span></div>';
-      fetchKrakenOHLC(coinId, tvInterval[coinId] || 5);
+      fetchOHLC(coinId, tvInterval[coinId] || 5);
     }
   }
 
@@ -3189,7 +3270,7 @@
       b.classList.toggle('active', b.textContent.trim() === tfLabel(interval));
     });
     tvMarkers[expandedCoin] = [];
-    fetchKrakenOHLC(expandedCoin, interval);
+    fetchOHLC(expandedCoin, interval);
   }
 
   function updateExpandedPrice(coinId) {
