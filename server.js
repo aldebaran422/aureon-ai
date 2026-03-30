@@ -10,6 +10,11 @@ import { callModel }    from './assistant/model.js';
 import authRoutes       from './auth/routes.js';
 import userRoutes       from './user/routes.js';
 
+// ── Startup diagnostics ──────────────────────────────────────────────────────
+console.log('[startup] ANTHROPIC_API_KEY present:', !!process.env.ANTHROPIC_API_KEY);
+console.log('[startup] JWT_SECRET present:        ', !!process.env.JWT_SECRET);
+console.log('[startup] DATABASE_PATH:             ', process.env.DATABASE_PATH);
+
 // Load .env for local development only.
 // On Railway/Render, env vars are injected natively — no .env file exists there.
 const envFile = new URL('.env', import.meta.url).pathname;
