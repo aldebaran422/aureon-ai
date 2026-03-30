@@ -3,7 +3,7 @@
 
 // Increment this version string with every production deploy
 // so all users get a fresh cache immediately.
-const CACHE = 'aureon-v2';
+const CACHE = 'aureon-v3';
 
 const SHELL = [
   '/',
