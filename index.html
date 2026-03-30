@@ -3689,12 +3689,12 @@
   function shareCurrentCoin() {
     const url = location.href;
     if (navigator.clipboard) {
-      navigator.clipboard.writeText(url).then(() => showToast('Link copied to clipboard', 'info'));
+      navigator.clipboard.writeText(url).then(() => showToast('Link copied', 'Coin URL copied to clipboard', 'info'));
     } else {
       const ta = document.createElement('textarea');
       ta.value = url; ta.style.position = 'fixed'; ta.style.opacity = '0';
       document.body.appendChild(ta); ta.select();
-      try { document.execCommand('copy'); showToast('Link copied to clipboard', 'info'); } catch(e) {}
+      try { document.execCommand('copy'); showToast('Link copied', 'Coin URL copied to clipboard', 'info'); } catch(e) {}
       document.body.removeChild(ta);
     }
   }
@@ -3730,7 +3730,7 @@
   }
 
   // Generic toast — for non-coin events (e.g. "Link copied")
-  function showToast(title, cls, desc) {
+  function showToast(title, desc, cls) {
     const stack = document.getElementById('toast-stack');
     if (!stack) return;
     const t = document.createElement('div');
