@@ -1702,9 +1702,11 @@
   }
 
   async function submitSignup() {
+    console.log('[signup] submitSignup called');
     const email    = document.getElementById('signup-email')?.value.trim();
     const password = document.getElementById('signup-password')?.value;
     const confirm  = document.getElementById('signup-confirm')?.value;
+    console.log('[signup] email:', email, '| password length:', password?.length);
     if (!email || !password) return setAuthError('Please fill in all fields.');
     if (password !== confirm) return setAuthError('Passwords do not match.');
     if (password.length < 8) return setAuthError('Password must be at least 8 characters.');
@@ -4629,19 +4631,23 @@
       // Login view
       '<div id="auth-view-login">' +
         '<div class="auth-title">Sign in</div>' +
-        '<div class="auth-field"><label>Email</label><input id="login-email" type="email" autocomplete="email" placeholder="you@example.com" onkeydown="if(event.key===\'Enter\')submitLogin()" /></div>' +
-        '<div class="auth-field"><label>Password</label><input id="login-password" type="password" autocomplete="current-password" placeholder="••••••••" onkeydown="if(event.key===\'Enter\')submitLogin()" /></div>' +
-        '<button id="login-submit-btn" class="auth-submit" onclick="submitLogin()">Sign in</button>' +
-        '<p class="auth-switch">No account? <button onclick="showAuthView(\'signup\')">Create one</button></p>' +
+        '<form id="login-form" onsubmit="event.preventDefault(); submitLogin();" novalidate>' +
+          '<div class="auth-field"><label>Email</label><input id="login-email" type="email" autocomplete="email" placeholder="you@example.com" /></div>' +
+          '<div class="auth-field"><label>Password</label><input id="login-password" type="password" autocomplete="current-password" placeholder="••••••••" /></div>' +
+          '<button id="login-submit-btn" type="submit" class="auth-submit">Sign in</button>' +
+        '</form>' +
+        '<p class="auth-switch">No account? <button type="button" onclick="showAuthView(\'signup\')">Create one</button></p>' +
       '</div>' +
 
       // Signup view
       '<div id="auth-view-signup" style="display:none">' +
         '<div class="auth-title">Create account</div>' +
-        '<div class="auth-field"><label>Email</label><input id="signup-email" type="email" autocomplete="email" placeholder="you@example.com" onkeydown="if(event.key===\'Enter\')submitSignup()" /></div>' +
-        '<div class="auth-field"><label>Password</label><input id="signup-password" type="password" autocomplete="new-password" placeholder="At least 8 characters" onkeydown="if(event.key===\'Enter\')submitSignup()" /></div>' +
-        '<div class="auth-field"><label>Confirm password</label><input id="signup-confirm" type="password" autocomplete="new-password" placeholder="••••••••" onkeydown="if(event.key===\'Enter\')submitSignup()" /></div>' +
-        '<button id="signup-submit-btn" class="auth-submit" onclick="submitSignup()">Create account</button>' +
+        '<form id="signup-form" onsubmit="event.preventDefault(); submitSignup();" novalidate>' +
+          '<div class="auth-field"><label>Email</label><input id="signup-email" type="email" autocomplete="email" placeholder="you@example.com" /></div>' +
+          '<div class="auth-field"><label>Password</label><input id="signup-password" type="password" autocomplete="new-password" placeholder="At least 8 characters" /></div>' +
+          '<div class="auth-field"><label>Confirm password</label><input id="signup-confirm" type="password" autocomplete="new-password" placeholder="••••••••" /></div>' +
+          '<button id="signup-submit-btn" type="submit" class="auth-submit">Create account</button>' +
+        '</form>' +
         '<p class="auth-switch">Already have an account? <button onclick="showAuthView(\'login\')">Sign in</button></p>' +
       '</div>' +
 
