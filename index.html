@@ -125,8 +125,11 @@
 
     /* ── Section labels ── */
     .section-label {
-      font-size: 0.82rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
-      color: #C9A84C; margin-bottom: 1rem; padding-top: 2.75rem;
+      font-size: 0.82rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase;
+      margin-bottom: 1rem; padding-top: 2.75rem;
+      background: linear-gradient(90deg, #C9A84C 0%, #F5D98B 35%, #C9A84C 55%, #8B6914 75%, #C9A84C 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
     .section-count {
       display: inline-flex; align-items: center; justify-content: center;
@@ -172,10 +175,12 @@
     }
     .smart-section-label svg { flex-shrink: 0; }
     .curated-label {
-      color: #C9A84C;
       letter-spacing: 0.1em;
       text-transform: uppercase;
       font-size: 0.75rem;
+      background: linear-gradient(90deg, #C9A84C 0%, #F5D98B 35%, #C9A84C 55%, #8B6914 75%, #C9A84C 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
     .smart-strip {
       display: flex; gap: 0.55rem; overflow-x: auto; padding-bottom: 0.25rem;
