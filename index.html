@@ -4693,11 +4693,20 @@
       '<div class="delete-account-title">Delete your account?</div>' +
       '<p class="delete-account-body">This will permanently delete your account, alerts, and all saved data. This cannot be undone.</p>' +
       '<div class="delete-account-actions">' +
-        '<button class="delete-account-cancel" onclick="closeDeleteAccountModal()">Cancel</button>' +
-        '<button class="delete-account-confirm" id="delete-account-confirm-btn" onclick="confirmDeleteAccount()">Delete</button>' +
+        '<button class="delete-account-cancel" id="delete-account-cancel-btn">Cancel</button>' +
+        '<button class="delete-account-confirm" id="delete-account-confirm-btn">Delete</button>' +
       '</div>' +
     '</div>';
   document.body.appendChild(deleteAccountOverlay);
+
+  // Wire buttons programmatically — avoids iOS onclick-in-innerHTML reliability issues
+  document.getElementById('delete-account-cancel-btn').addEventListener('click', function() {
+    closeDeleteAccountModal();
+  });
+  document.getElementById('delete-account-confirm-btn').addEventListener('click', function() {
+    console.log('[deleteAccount] confirm tapped');
+    confirmDeleteAccount();
+  });
 
   function openDeleteAccountModal() {
     if (!authUser) return;
