@@ -4721,13 +4721,17 @@
       });
       const data = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(data.error || 'Delete failed');
+
+      // Close modal and clear session before touching the DOM
       closeDeleteAccountModal();
       clearAuthSession();
-      renderHome();
+      // Show success toast first — before renderHome() which may throw
       showToast('Account deleted', 'Your account and all data have been removed.', 'info');
+      try { renderHome(); } catch(re) { console.error('[deleteAccount] renderHome error:', re); }
     } catch(e) {
-      closeDeleteAccountModal();
-      showToast('Error', e.message, 'warn');
+      // Only fires for real API/network failures
+      if (btn) { btn.disabled = false; btn.textContent = 'Delete'; }
+      showToast('Could not delete account', e.message, 'warn');
     }
   }
 
