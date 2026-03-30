@@ -967,6 +967,34 @@
     }
     .disclaimer-accept:hover { opacity: 0.88; }
 
+    /* ── Email verification banner ── */
+    .verify-banner {
+      display: flex; align-items: flex-start; gap: 0.75rem;
+      padding: 0.85rem 1rem; margin-bottom: 0.75rem;
+      background: rgba(245,158,11,0.08);
+      border: 1px solid rgba(245,158,11,0.25);
+      border-radius: 14px;
+    }
+    .verify-banner-icon { font-size: 1rem; flex-shrink: 0; margin-top: 0.05rem; }
+    .verify-banner-body { flex: 1; }
+    .verify-banner-title {
+      font-size: 0.82rem; font-weight: 700; color: #f59e0b;
+      margin-bottom: 0.2rem; line-height: 1.3;
+    }
+    .verify-banner-sub {
+      font-size: 0.72rem; color: rgba(255,255,255,0.55); line-height: 1.5;
+    }
+    .verify-banner-btn {
+      margin-top: 0.55rem;
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.04em;
+      padding: 0.3rem 0.75rem; border-radius: 8px;
+      border: 1px solid rgba(245,158,11,0.4);
+      background: rgba(245,158,11,0.1); color: #f59e0b;
+      cursor: pointer; transition: background 0.15s, border-color 0.15s;
+    }
+    .verify-banner-btn:hover { background: rgba(245,158,11,0.2); border-color: rgba(245,158,11,0.6); }
+    .verify-banner-btn:disabled { opacity: 0.5; cursor: default; }
+
     /* ── Footer disclaimer ── */
     .home-footer {
       margin-top: 2.5rem; padding: 1.25rem 0 2rem;
@@ -1559,6 +1587,64 @@
     openAuthModal(contextMsg, onSuccess);
   }
 
+  // Gate that requires both login AND a verified email
+  function requireVerified(onSuccess, contextMsg) {
+    requireLogin(() => {
+      if (!authUser.verified) {
+        showToast('Email not verified', 'Check your inbox and verify your email to unlock this feature.', 'warn');
+        return;
+      }
+      onSuccess();
+    }, contextMsg);
+  }
+
+  async function resendVerificationEmail() {
+    const btn = document.getElementById('resend-verify-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
+    try {
+      const r = await authFetch('/api/auth/resend-verification', { method: 'POST' });
+      const d = await r.json();
+      if (r.ok) {
+        showToast('Email sent', 'Check your inbox for a new verification link.', 'info');
+        if (btn) btn.textContent = 'Sent ✓';
+      } else {
+        showToast('Error', d.error || 'Could not send email', 'warn');
+        if (btn) { btn.disabled = false; btn.textContent = 'Resend email'; }
+      }
+    } catch(e) {
+      showToast('Error', 'Network error — try again', 'warn');
+      if (btn) { btn.disabled = false; btn.textContent = 'Resend email'; }
+    }
+  }
+
+  // Handle ?verified= URL param (landing from email link)
+  (function handleVerifyParam() {
+    const params = new URLSearchParams(location.search);
+    const v = params.get('verified');
+    if (!v) return;
+    // Clean the URL immediately
+    history.replaceState({}, '', '/');
+    if (v === '1') {
+      // Refresh auth state from server so verified flag is up to date
+      if (authToken) {
+        authFetch('/api/auth/me').then(r => r.ok ? r.json() : null).then(d => {
+          if (d?.user) {
+            authUser = d.user;
+            try { localStorage.setItem('aureon-user', JSON.stringify(authUser)); } catch(e) {}
+            renderHome();
+          }
+        }).catch(() => {});
+      }
+      setTimeout(() => showToast('Email verified ✓', 'Your account is now fully unlocked.', 'up'), 400);
+    } else if (v === 'expired') {
+      setTimeout(() => showToast('Link expired', 'Request a new verification link from the app.', 'warn'), 400);
+    } else if (v === 'invalid') {
+      setTimeout(() => showToast('Invalid link', 'This verification link is not valid.', 'warn'), 400);
+    } else if (v === 'already') {
+      setTimeout(() => showToast('Already verified', 'Your email is already verified.', 'info'), 400);
+    }
+  })();
+
   let _authModalCallback = null;
 
   function openAuthModal(contextMsg, callback) {
@@ -1780,8 +1866,8 @@
   }
 
   function toggleFavorite(coinId) {
-    if (!authUser) {
-      requireLogin(() => toggleFavorite(coinId), 'Sign in to save favorites across devices');
+    if (!authUser || !authUser.verified) {
+      requireVerified(() => toggleFavorite(coinId), 'Sign in to save favorites across devices');
       return;
     }
     const idx = favorites.indexOf(coinId);
@@ -1839,10 +1925,23 @@
   }
 
   // ── Home view ───────────────────────────────────────────────────────────────
+  function buildVerifyBanner() {
+    if (!authUser || authUser.verified) return '';
+    return '<div class="verify-banner">' +
+      '<div class="verify-banner-icon">✉️</div>' +
+      '<div class="verify-banner-body">' +
+        '<div class="verify-banner-title">Please verify your email</div>' +
+        '<div class="verify-banner-sub">Verify your email address to unlock alerts, favorites, and portfolio tracking.</div>' +
+        '<button class="verify-banner-btn" id="resend-verify-btn" onclick="resendVerificationEmail()">Resend email</button>' +
+      '</div>' +
+    '</div>';
+  }
+
   function renderHome() {
     document.getElementById('app').innerHTML =
       '<div class="page-wrap">' +
         buildHeroSection() +
+        buildVerifyBanner() +
         buildFavSection() +
         '<div id="smart-sections">' + buildSmartSections() + '</div>' +
         buildMoversSection() +
