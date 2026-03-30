@@ -38,16 +38,23 @@ app.get('/site.webmanifest', (req, res) => {
 app.use(express.static(dirname(fileURLToPath(import.meta.url))));
 
 app.post('/api/assistant', async (req, res) => {
+  console.log('[/api/assistant] incoming request:', JSON.stringify(req.body));
+
   const validationError = validate(req.body);
-  if (validationError) return res.status(400).json({ error: validationError });
+  if (validationError) {
+    console.error('[/api/assistant] validation error:', validationError);
+    return res.status(400).json({ error: validationError });
+  }
 
   const ctx          = buildContext(req.body);
   const systemPrompt = buildPrompt(ctx);
 
   try {
     const { text, model } = await callModel({ systemPrompt, messages: ctx.history, market: ctx.market, mode: ctx.mode });
+    const response = text || 'Claude returned an empty response';
+    console.log('[/api/assistant] Claude response:', response);
     res.json({
-      response: text,
+      response,
       debug: {
         model,
         promptChars: systemPrompt.length,
@@ -55,8 +62,8 @@ app.post('/api/assistant', async (req, res) => {
       },
     });
   } catch (err) {
-    console.error('[/api/assistant]', err.message);
-    res.status(500).json({ error: err.message });
+    console.error('[/api/assistant] Claude error:', err.message);
+    res.json({ response: `Error: ${err.message}` });
   }
 });
 

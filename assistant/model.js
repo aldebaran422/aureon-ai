@@ -15,8 +15,11 @@ export async function callModel({ systemPrompt, messages }) {
     messages,
   });
 
+  const text = msg.content.find(b => b.type === 'text')?.text ?? '';
+  console.log('[model.js] Claude raw response:', text);
+
   return {
-    text:  msg.content.find(b => b.type === 'text')?.text ?? '',
+    text: text || 'Claude returned an empty response',
     model: 'claude-opus-4-5',
   };
 }
