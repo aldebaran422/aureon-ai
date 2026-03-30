@@ -154,8 +154,10 @@ router.delete('/account', (req, res, next) => {
   console.log('[auth] DELETE /account — deleting userId:', req.userId);
   const user = db.prepare('SELECT id, email FROM users WHERE id = ?').get(req.userId);
   if (!user) {
-    console.warn('[auth] DELETE /account — user not found:', req.userId);
-    return res.status(404).json({ error: 'User not found' });
+    // Already deleted (e.g. from a previous attempt where the client didn't get the response).
+    // The goal is achieved — treat as success so the client can clear its session.
+    console.log('[auth] DELETE /account — user already gone, treating as success:', req.userId);
+    return res.json({ ok: true });
   }
 
   // Cascading deletes handle user_data and portfolio_holdings (ON DELETE CASCADE)
