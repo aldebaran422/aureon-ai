@@ -1910,40 +1910,10 @@
   // Trading chart state (persists across navigation)
   const tvCharts      = {};
   const tvSeries      = {};
-  // Binance USDT pairs — null means fall back to Kraken (coin not listed on Binance)
-  const BINANCE_PAIRS = {
-    'ripple':             'XRPUSDT',  'bitcoin':           'BTCUSDT',
-    'ethereum':           'ETHUSDT',  'solana':            'SOLUSDT',
-    'cardano':            'ADAUSDT',  'hedera-hashgraph':  'HBARUSDT',
-    'dogecoin':           'DOGEUSDT', 'chex-token':         null,
-    'chainlink':          'LINKUSDT', 'stellar':           'XLMUSDT',
-    'algorand':           'ALGOUSDT', 'vechain':           'VETUSDT',
-    'avalanche-2':        'AVAXUSDT', 'polkadot':          'DOTUSDT',
-    'matic-network':      'POLUSDT',  'cosmos':            'ATOMUSDT',
-    'litecoin':           'LTCUSDT',  'bitcoin-cash':      'BCHUSDT',
-    'internet-computer':  'ICPUSDT',  'near':              'NEARUSDT',
-    'aptos':              'APTUSDT',  'arbitrum':          'ARBUSDT',
-    'optimism':           'OPUSDT',   'starknet':          'STRKUSDT',
-    'sui':                'SUIUSDT',  'sei-network':       'SEIUSDT',
-    'fantom':             'FTMUSDT',  'aave':              'AAVEUSDT',
-    'maker':              'MKRUSDT',  'curve-dao-token':   'CRVUSDT',
-    'lido-dao':           'LDOUSDT',  'uniswap':           'UNIUSDT',
-    'thorchain':          'RUNEUSDT', 'pepe':              'PEPEUSDT',
-    'dogwifcoin':         'WIFUSDT',  'bonk':              'BONKUSDT',
-    'render-token':       'RENDERUSDT','fetch-ai':         'FETUSDT',
-    'bittensor':          'TAOUSDT',  'the-graph':         'GRTUSDT',
-    'celestia':           'TIAUSDT',  'injective-protocol':'INJUSDT',
-    'kaspa':              'KASUSDT',  'worldcoin-wld':     'WLDUSDT',
-    'the-sandbox':        'SANDUSDT', 'decentraland':      'MANAUSDT',
-    'flow':               'FLOWUSDT', 'filecoin':          'FILUSDT',
-  };
-  // Binance interval strings for each minute-value
-  const BINANCE_IV = { 1: '1m', 5: '5m', 15: '15m', 60: '1h', 240: '4h', 1440: '1d' };
-
-  // How many candles to fetch per timeframe (drives parallel Binance page count)
-  // 1D/4H reach ~5yr; 1H ~1yr; shorter TFs limited by practical chart usability
-  const CANDLE_COUNTS  = { 1: 720, 5: 2016, 15: 2880, 60: 8760, 240: 10950, 1440: 1826 };
-  const CANDLE_HISTORY = { 1: '~12h', 5: '~7d', 15: '~30d', 60: '~1yr', 240: '~5yr', 1440: '~5yr' };
+  // Kraken parallel pages per timeframe — each page fetches up to 720 candles
+  // 1m:1pg≈12h  5m:3pg≈7.5d  15m:4pg≈30d  1H:5pg≈5mo  4H:6pg≈2yr  1D:3pg≈5yr
+  const KRAKEN_PAGES   = { 1: 1, 5: 3, 15: 4, 60: 5, 240: 6, 1440: 3 };
+  const CANDLE_HISTORY = { 1: '~12h', 5: '~7.5d', 15: '~30d', 60: '~5mo', 240: '~2yr', 1440: '~5yr' };
   function tfLabel(iv) {
     return iv === 1 ? '1m' : iv === 5 ? '5m' : iv === 15 ? '15m' : iv === 60 ? '1H' : iv === 240 ? '4H' : '1D';
   }
@@ -2786,62 +2756,45 @@
     return result;
   }
 
-  // Fetch N candles from Binance in parallel pages for deep history
-  async function fetchBinancePaged(symbol, binInterval, totalWanted) {
-    const msPerCandle = { '1m': 60000, '5m': 300000, '15m': 900000,
-                          '1h': 3600000, '4h': 14400000, '1d': 86400000 }[binInterval];
-    const pageSize = 1000;
-    const now      = Date.now();
-    const startMs  = now - totalWanted * msPerCandle;
-    const pages    = Math.ceil(totalWanted / pageSize);
+  // Fetch candles from Kraken in parallel pages for deep history
+  async function fetchKrakenPaged(krakenPair, interval) {
+    const secPerCandle = interval * 60; // interval is in minutes; 1440min=1day
+    const numPages     = KRAKEN_PAGES[interval] || 1;
+    const now          = Math.floor(Date.now() / 1000);
 
-    const fetches = Array.from({ length: pages }, (_, i) => {
-      const s = Math.floor(startMs + i * pageSize * msPerCandle);
-      const e = Math.floor(Math.min(s + pageSize * msPerCandle - 1, now));
-      return fetch('https://api.binance.com/api/v3/klines?symbol=' + symbol +
-        '&interval=' + binInterval + '&startTime=' + s + '&endTime=' + e + '&limit=' + pageSize)
-        .then(r => r.json()).catch(() => []);
+    const fetches = Array.from({ length: numPages }, (_, i) => {
+      const since = now - (numPages - i) * 720 * secPerCandle;
+      return fetch('https://api.kraken.com/0/public/OHLC?pair=' + krakenPair +
+        '&interval=' + interval + '&since=' + since)
+        .then(r => r.json()).catch(() => ({ error: ['fetch failed'] }));
     });
 
     const results = await Promise.all(fetches);
-    const seen = new Set();
+    const seen    = new Set();
     const candles = [];
     for (const data of results) {
-      if (!Array.isArray(data)) continue;
-      for (const d of data) {
-        if (!d || !d[0]) continue;
-        const t = Math.floor(d[0] / 1000); // ms → s
+      if (!data || (data.error && data.error.length)) continue;
+      const key = Object.keys(data.result || {}).find(k => k !== 'last');
+      if (!key) continue;
+      for (const d of data.result[key]) {
+        const t = d[0];
         if (seen.has(t)) continue;
         seen.add(t);
         candles.push({ time: t, open: parseFloat(d[1]), high: parseFloat(d[2]),
-                       low: parseFloat(d[3]), close: parseFloat(d[4]), volume: parseFloat(d[5]) });
+                       low: parseFloat(d[3]), close: parseFloat(d[4]), volume: parseFloat(d[6]) });
       }
     }
     return candles.sort((a, b) => a.time - b.time);
   }
 
-  // Fetch OHLC — Binance first (deep history), Kraken fallback for unlisted coins
+  // Fetch OHLC via parallel-paged Kraken requests for full history
   async function fetchOHLC(coinId, interval) {
     const coin   = getCoin(coinId);
     const status = document.getElementById('tv-status-' + coinId);
     if (status) status.innerHTML = '<div class="chart-dots"><span></span><span></span><span></span></div>';
     try {
-      let candles;
-      const bp = BINANCE_PAIRS[coinId];
-      if (bp) {
-        candles = await fetchBinancePaged(bp, BINANCE_IV[interval], CANDLE_COUNTS[interval]);
-        if (!candles.length) throw new Error('No data from Binance');
-      } else {
-        // Kraken fallback (e.g. CHEX)
-        const res  = await fetch('https://api.kraken.com/0/public/OHLC?pair=' + coin.krakenPair + '&interval=' + interval);
-        const data = await res.json();
-        if (data.error && data.error.length) throw new Error(data.error[0]);
-        const key = Object.keys(data.result).find(k => k !== 'last');
-        candles = data.result[key].map(d => ({
-          time: d[0], open: parseFloat(d[1]), high: parseFloat(d[2]),
-          low: parseFloat(d[3]), close: parseFloat(d[4]), volume: parseFloat(d[6]),
-        })).slice(-(CANDLE_COUNTS[interval] || 720));
-      }
+      const candles = await fetchKrakenPaged(coin.krakenPair, interval);
+      if (!candles.length) throw new Error('No data from Kraken');
       if (!tvAllCandles[coinId]) tvAllCandles[coinId] = {};
       tvAllCandles[coinId][interval] = candles;
       tvLastCandles[coinId] = candles;
@@ -2933,21 +2886,8 @@
     await Promise.all([1, 5, 1440].map(async iv => {
       if (tvAllCandles[coinId][iv]) return;
       try {
-        let candles;
-        const bp = BINANCE_PAIRS[coinId];
-        if (bp) {
-          candles = await fetchBinancePaged(bp, BINANCE_IV[iv], CANDLE_COUNTS[iv]);
-          if (!candles.length) throw new Error('empty');
-        } else {
-          const res  = await fetch('https://api.kraken.com/0/public/OHLC?pair=' + coin.krakenPair + '&interval=' + iv);
-          const data = await res.json();
-          if (data.error && data.error.length) throw new Error(data.error[0]);
-          const key = Object.keys(data.result).find(k => k !== 'last');
-          candles = data.result[key].map(d => ({
-            time: d[0], open: parseFloat(d[1]), high: parseFloat(d[2]),
-            low:  parseFloat(d[3]), close: parseFloat(d[4]), volume: parseFloat(d[6]),
-          }));
-        }
+        const candles = await fetchKrakenPaged(coin.krakenPair, iv);
+        if (!candles.length) throw new Error('empty');
         tvAllCandles[coinId][iv] = candles;
         updateMTFRow(coinId);
         if (iv === 5) { updateTrend(coinId); checkTrendFlip(coinId); checkRSIAlert(coinId); }
