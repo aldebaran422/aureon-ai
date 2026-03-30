@@ -2023,7 +2023,7 @@
       '<div class="verify-banner-body">' +
         '<div class="verify-banner-title">Please verify your email</div>' +
         '<div class="verify-banner-sub">Verify your email address to unlock alerts, favorites, and portfolio tracking.</div>' +
-        '<button class="verify-banner-btn" id="resend-verify-btn" onclick="resendVerificationEmail()">Resend email</button>' +
+        '<button class="verify-banner-btn" id="resend-verify-btn" type="button">Resend email</button>' +
       '</div>' +
     '</div>';
   }
@@ -2049,6 +2049,10 @@
     });
     inp.addEventListener('focus', () => { searchOpen = true; refreshSearchResults(); });
     _updateBell();
+
+    // Wire resend-verify button programmatically each time home is rendered
+    const resendBtn = document.getElementById('resend-verify-btn');
+    if (resendBtn) resendBtn.addEventListener('click', resendVerificationEmail);
   }
 
   function buildHeroSection() {
@@ -4692,20 +4696,23 @@
       '<div class="delete-account-icon">⚠️</div>' +
       '<div class="delete-account-title">Delete your account?</div>' +
       '<p class="delete-account-body">This will permanently delete your account, alerts, and all saved data. This cannot be undone.</p>' +
-      '<div class="delete-account-actions">' +
-        '<button class="delete-account-cancel" id="delete-account-cancel-btn">Cancel</button>' +
-        '<button class="delete-account-confirm" id="delete-account-confirm-btn">Delete</button>' +
-      '</div>' +
+      '<form id="delete-account-form" onsubmit="event.preventDefault();">' +
+        '<div class="delete-account-actions">' +
+          '<button type="button" class="delete-account-cancel" id="delete-account-cancel-btn">Cancel</button>' +
+          '<button type="submit" class="delete-account-confirm" id="delete-account-confirm-btn">Delete</button>' +
+        '</div>' +
+      '</form>' +
     '</div>';
   document.body.appendChild(deleteAccountOverlay);
 
-  // Wire buttons programmatically — avoids iOS onclick-in-innerHTML reliability issues
+  // Wire via form submit (most reliable on iOS Safari) + click fallback
+  document.getElementById('delete-account-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    console.log('[deleteAccount] form submitted');
+    confirmDeleteAccount();
+  });
   document.getElementById('delete-account-cancel-btn').addEventListener('click', function() {
     closeDeleteAccountModal();
-  });
-  document.getElementById('delete-account-confirm-btn').addEventListener('click', function() {
-    console.log('[deleteAccount] confirm tapped');
-    confirmDeleteAccount();
   });
 
   function openDeleteAccountModal() {
