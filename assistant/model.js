@@ -2,24 +2,27 @@
 // The key is set in Railway's Variables dashboard; never hard-coded here.
 
 export async function callModel({ systemPrompt, messages }) {
-  const { default: Anthropic } = await import('@anthropic-ai/sdk');
-  // Let the SDK read ANTHROPIC_API_KEY from process.env directly.
-  // Passing apiKey explicitly can cause auth failures if the value is
-  // evaluated before the env is fully loaded.
-  const client = new Anthropic();
+  try {
+    const { default: Anthropic } = await import('@anthropic-ai/sdk');
+    const client = new Anthropic();
 
-  const msg = await client.messages.create({
-    model:      'claude-opus-4-5',
-    max_tokens: 1024,
-    system:     systemPrompt,
-    messages,
-  });
+    const response = await client.messages.create({
+      model:      'claude-opus-4-5',
+      max_tokens: 1024,
+      system:     systemPrompt,
+      messages,
+    });
 
-  const text = msg.content.find(b => b.type === 'text')?.text ?? '';
-  console.log('[model.js] Claude raw response:', text);
+    console.log('[model.js] Claude raw response:', JSON.stringify(response, null, 2));
 
-  return {
-    text: text || 'Claude returned an empty response',
-    model: 'claude-opus-4-5',
-  };
+    const text = response?.content?.[0]?.text ?? '';
+
+    return {
+      text:  text || 'Claude returned an empty response',
+      model: 'claude-opus-4-5',
+    };
+  } catch (err) {
+    console.error('[model.js] Claude SDK error:', err);
+    throw err; // re-throw so server.js catch block surfaces it
+  }
 }

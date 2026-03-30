@@ -1,3 +1,11 @@
+// ── Process-level crash guards (must be first) ────────────────────────────────
+process.on('uncaughtException', (err) => {
+  console.error('[uncaughtException]', err);
+});
+process.on('unhandledRejection', (err) => {
+  console.error('[unhandledRejection]', err);
+});
+
 import express from 'express';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
@@ -10,7 +18,7 @@ import { callModel }    from './assistant/model.js';
 import authRoutes       from './auth/routes.js';
 import userRoutes       from './user/routes.js';
 
-// ── Startup diagnostics ──────────────────────────────────────────────────────
+// ── Startup diagnostics ───────────────────────────────────────────────────────
 console.log('[startup] ANTHROPIC_API_KEY present:', !!process.env.ANTHROPIC_API_KEY);
 console.log('[startup] JWT_SECRET present:        ', !!process.env.JWT_SECRET);
 console.log('[startup] DATABASE_PATH:             ', process.env.DATABASE_PATH);
@@ -38,21 +46,22 @@ app.get('/site.webmanifest', (req, res) => {
 app.use(express.static(dirname(fileURLToPath(import.meta.url))));
 
 app.post('/api/assistant', async (req, res) => {
-  console.log('[/api/assistant] incoming request:', JSON.stringify(req.body));
-
-  const validationError = validate(req.body);
-  if (validationError) {
-    console.error('[/api/assistant] validation error:', validationError);
-    return res.status(400).json({ error: validationError });
-  }
-
-  const ctx          = buildContext(req.body);
-  const systemPrompt = buildPrompt(ctx);
-
   try {
+    console.log('[api/assistant] incoming request:', req.body);
+
+    const validationError = validate(req.body);
+    if (validationError) {
+      console.error('[api/assistant] validation error:', validationError);
+      return res.status(400).json({ response: 'Invalid request: ' + validationError });
+    }
+
+    const ctx          = buildContext(req.body);
+    const systemPrompt = buildPrompt(ctx);
+
     const { text, model } = await callModel({ systemPrompt, messages: ctx.history, market: ctx.market, mode: ctx.mode });
     const response = text || 'Claude returned an empty response';
-    console.log('[/api/assistant] Claude response:', response);
+    console.log('[api/assistant] sending response:', response);
+
     res.json({
       response,
       debug: {
@@ -62,8 +71,8 @@ app.post('/api/assistant', async (req, res) => {
       },
     });
   } catch (err) {
-    console.error('[/api/assistant] Claude error:', err.message);
-    res.json({ response: `Error: ${err.message}` });
+    console.error('[api/assistant] error:', err);
+    res.status(500).json({ response: 'Server error: ' + (err?.message || 'unknown error') });
   }
 });
 
