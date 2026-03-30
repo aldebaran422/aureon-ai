@@ -3,7 +3,10 @@
 
 export async function callModel({ systemPrompt, messages }) {
   const { default: Anthropic } = await import('@anthropic-ai/sdk');
-  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  // Let the SDK read ANTHROPIC_API_KEY from process.env directly.
+  // Passing apiKey explicitly can cause auth failures if the value is
+  // evaluated before the env is fully loaded.
+  const client = new Anthropic();
 
   const msg = await client.messages.create({
     model:      'claude-opus-4-5',
