@@ -4711,25 +4711,24 @@
   }
 
   async function confirmDeleteAccount() {
+    console.log('[deleteAccount] called, authToken present:', !!authToken);
     const btn = document.getElementById('delete-account-confirm-btn');
     if (btn) { btn.disabled = true; btn.textContent = 'Deleting…'; }
     try {
-      const token = localStorage.getItem('aureon-token');
-      const r = await fetch('/api/auth/account', {
-        method: 'DELETE',
-        headers: { 'Authorization': 'Bearer ' + token },
-      });
-      const data = await r.json().catch(() => ({}));
-      if (!r.ok) throw new Error(data.error || 'Delete failed');
+      const r    = await authFetch('/api/auth/account', { method: 'DELETE' });
+      const raw  = await r.text();
+      console.log('[deleteAccount] status:', r.status, 'body:', raw.slice(0, 200));
+      let data = {};
+      try { data = JSON.parse(raw); } catch(e) { /* non-JSON response */ }
+      if (!r.ok) throw new Error(data.error || `Server error ${r.status}`);
 
-      // Close modal and clear session before touching the DOM
+      // Success — close modal, wipe session, show toast, re-render
       closeDeleteAccountModal();
       clearAuthSession();
-      // Show success toast first — before renderHome() which may throw
       showToast('Account deleted', 'Your account and all data have been removed.', 'info');
       try { renderHome(); } catch(re) { console.error('[deleteAccount] renderHome error:', re); }
     } catch(e) {
-      // Only fires for real API/network failures
+      console.error('[deleteAccount] error:', e);
       if (btn) { btn.disabled = false; btn.textContent = 'Delete'; }
       showToast('Could not delete account', e.message, 'warn');
     }
