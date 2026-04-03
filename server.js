@@ -78,5 +78,171 @@ app.post('/api/assistant', async (req, res) => {
   }
 });
 
+app.get('/privacy', (req, res) => {
+  res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aureon Privacy Policy</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0a0a0a; color: #e5e5e5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; }
+  .container { max-width: 760px; margin: 0 auto; padding: 60px 24px; }
+  .logo { display: flex; align-items: center; gap: 12px; margin-bottom: 48px; }
+  .logo-a { font-size: 32px; font-weight: 900; color: #C9A84C; font-style: italic; }
+  .logo-text { font-size: 20px; font-weight: 700; color: #C9A84C; letter-spacing: 4px; }
+  h1 { font-size: 28px; font-weight: 700; color: #ffffff; margin-bottom: 8px; }
+  .updated { font-size: 13px; color: #666; margin-bottom: 48px; }
+  h2 { font-size: 17px; font-weight: 600; color: #C9A84C; margin: 36px 0 12px; }
+  p { font-size: 15px; color: #b0b0b0; margin-bottom: 12px; }
+  ul { padding-left: 20px; margin-bottom: 12px; }
+  li { font-size: 15px; color: #b0b0b0; margin-bottom: 6px; }
+  a { color: #C9A84C; text-decoration: none; }
+  .divider { border: none; border-top: 1px solid #1e1e1e; margin: 48px 0; }
+  .footer { font-size: 13px; color: #555; text-align: center; margin-top: 60px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="logo">
+    <span class="logo-a">A</span>
+    <span class="logo-text">AUREON</span>
+  </div>
+  <h1>Privacy Policy</h1>
+  <p class="updated">Last updated: April 3, 2026</p>
+
+  <p>Aureon ("we", "us", or "our") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, and safeguard your information when you use the Aureon mobile application.</p>
+
+  <h2>Information We Collect</h2>
+  <p>We collect the following information when you create an account:</p>
+  <ul>
+    <li>Email address (for account creation and verification)</li>
+    <li>Password (stored securely using industry-standard hashing)</li>
+  </ul>
+  <p>We also collect the following information automatically when you use the app:</p>
+  <ul>
+    <li>Cryptocurrency assets you view or add to favorites (stored locally on your device)</li>
+    <li>AI chat messages you send to Aureon AI (processed to generate responses, not stored permanently)</li>
+    <li>Basic usage data to improve app performance</li>
+  </ul>
+
+  <h2>How We Use Your Information</h2>
+  <ul>
+    <li>To create and manage your Aureon account</li>
+    <li>To send account verification and password reset emails</li>
+    <li>To provide personalized AI-powered crypto market analysis</li>
+    <li>To improve the app experience over time</li>
+  </ul>
+
+  <h2>Data Storage and Security</h2>
+  <p>Your account data is stored securely on our servers hosted by Railway. Passwords are hashed and never stored in plain text. Favorites and preferences are stored locally on your device using iOS UserDefaults.</p>
+
+  <h2>Third-Party Services</h2>
+  <p>Aureon uses the following third-party services:</p>
+  <ul>
+    <li><strong>CoinGecko</strong> — for cryptocurrency market data (no personal data shared)</li>
+    <li><strong>Anthropic Claude API</strong> — to power Aureon AI responses (messages are processed but not retained)</li>
+    <li><strong>Kraken API</strong> — for live order book data (no personal data shared)</li>
+    <li><strong>TradingView</strong> — for candlestick chart rendering (no personal data shared)</li>
+    <li><strong>Resend</strong> — for transactional emails such as verification and password reset</li>
+  </ul>
+
+  <h2>Financial Disclaimer</h2>
+  <p>Aureon is an informational and analysis tool only. Nothing in this app constitutes financial advice, investment advice, or a recommendation to buy or sell any cryptocurrency. Always do your own research and consult a qualified financial advisor before making investment decisions.</p>
+
+  <h2>Data Retention</h2>
+  <p>We retain your account information for as long as your account is active. You may request deletion of your account and associated data at any time by contacting us.</p>
+
+  <h2>Children's Privacy</h2>
+  <p>Aureon is not intended for use by anyone under the age of 13. We do not knowingly collect personal information from children under 13.</p>
+
+  <h2>Your Rights</h2>
+  <p>You have the right to access, correct, or delete your personal information at any time. To exercise these rights, please contact us at the email below.</p>
+
+  <h2>Changes to This Policy</h2>
+  <p>We may update this Privacy Policy from time to time. We will notify you of any significant changes via email or through the app.</p>
+
+  <h2>Contact Us</h2>
+  <p>If you have any questions about this Privacy Policy, please contact us at: <a href="mailto:privacy@aureonapp.com">privacy@aureonapp.com</a></p>
+
+  <hr class="divider">
+  <p class="footer">© 2026 Aureon. All rights reserved.</p>
+</div>
+</body>
+</html>`);
+});
+
+app.get('/terms', (req, res) => {
+  res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aureon Terms of Service</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0a0a0a; color: #e5e5e5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; }
+  .container { max-width: 760px; margin: 0 auto; padding: 60px 24px; }
+  .logo { display: flex; align-items: center; gap: 12px; margin-bottom: 48px; }
+  .logo-a { font-size: 32px; font-weight: 900; color: #C9A84C; font-style: italic; }
+  .logo-text { font-size: 20px; font-weight: 700; color: #C9A84C; letter-spacing: 4px; }
+  h1 { font-size: 28px; font-weight: 700; color: #ffffff; margin-bottom: 8px; }
+  .updated { font-size: 13px; color: #666; margin-bottom: 48px; }
+  h2 { font-size: 17px; font-weight: 600; color: #C9A84C; margin: 36px 0 12px; }
+  p { font-size: 15px; color: #b0b0b0; margin-bottom: 12px; }
+  ul { padding-left: 20px; margin-bottom: 12px; }
+  li { font-size: 15px; color: #b0b0b0; margin-bottom: 6px; }
+  a { color: #C9A84C; text-decoration: none; }
+  .divider { border: none; border-top: 1px solid #1e1e1e; margin: 48px 0; }
+  .footer { font-size: 13px; color: #555; text-align: center; margin-top: 60px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="logo">
+    <span class="logo-a">A</span>
+    <span class="logo-text">AUREON</span>
+  </div>
+  <h1>Terms of Service</h1>
+  <p class="updated">Last updated: April 3, 2026</p>
+
+  <p>By downloading or using Aureon, you agree to these Terms of Service. Please read them carefully.</p>
+
+  <h2>Use of the App</h2>
+  <p>Aureon is a cryptocurrency market analysis and AI assistant app. You agree to use it only for lawful purposes and in accordance with these terms.</p>
+
+  <h2>Not Financial Advice</h2>
+  <p>All content provided by Aureon, including AI-generated analysis, market data, and any other information, is for informational purposes only and does not constitute financial advice. We are not responsible for any financial decisions you make based on information provided by Aureon.</p>
+
+  <h2>Account Responsibilities</h2>
+  <ul>
+    <li>You are responsible for maintaining the confidentiality of your account credentials</li>
+    <li>You must provide accurate information when creating your account</li>
+    <li>You must be at least 13 years of age to use Aureon</li>
+  </ul>
+
+  <h2>Intellectual Property</h2>
+  <p>The Aureon name, logo, and all related content are the property of Aureon. You may not reproduce, distribute, or create derivative works without our written permission.</p>
+
+  <h2>Limitation of Liability</h2>
+  <p>Aureon is provided "as is" without warranties of any kind. We are not liable for any damages arising from your use of the app, including but not limited to financial losses.</p>
+
+  <h2>Termination</h2>
+  <p>We reserve the right to terminate or suspend your account at any time for violations of these terms.</p>
+
+  <h2>Changes to Terms</h2>
+  <p>We may update these terms at any time. Continued use of the app after changes constitutes acceptance of the new terms.</p>
+
+  <h2>Contact</h2>
+  <p>Questions? Contact us at <a href="mailto:support@aureonapp.com">support@aureonapp.com</a></p>
+
+  <hr class="divider">
+  <p class="footer">© 2026 Aureon. All rights reserved.</p>
+</div>
+</body>
+</html>`);
+});
+
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => console.log(`Aureon → http://localhost:${PORT}`));
