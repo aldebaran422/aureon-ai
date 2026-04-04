@@ -107,7 +107,6 @@ app.get('/privacy', (req, res) => {
 <div class="container">
   <div class="logo">
     <img src="/AureonLogo.png" alt="Aureon" style="height: 60px; width: auto;" />
-    <span class="logo-text">AUREON</span>
   </div>
   <h1>Privacy Policy</h1>
   <p class="updated">Last updated: April 3, 2026</p>
@@ -202,7 +201,6 @@ app.get('/terms', (req, res) => {
 <div class="container">
   <div class="logo">
     <img src="/AureonLogo.png" alt="Aureon" style="height: 60px; width: auto;" />
-    <span class="logo-text">AUREON</span>
   </div>
   <h1>Terms of Service</h1>
   <p class="updated">Last updated: April 3, 2026</p>
