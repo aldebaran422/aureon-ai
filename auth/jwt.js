@@ -1,7 +1,7 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 
 const SECRET = process.env.JWT_SECRET ?? 'dev-secret-change-me';
-const TTL    = 30 * 24 * 60 * 60; // 30 days in seconds
+const TTL    = 365 * 24 * 60 * 60; // 365 days in seconds
 
 function b64url(obj) {
   return Buffer.from(JSON.stringify(obj)).toString('base64url');

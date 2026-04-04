@@ -17,6 +17,8 @@ import { buildPrompt }  from './assistant/prompt.js';
 import { callModel }    from './assistant/model.js';
 import authRoutes       from './auth/routes.js';
 import userRoutes       from './user/routes.js';
+import portfolioRouter  from './portfolio/routes.js';
+import alertsRouter     from './alerts/routes.js';
 
 // ── Startup diagnostics ───────────────────────────────────────────────────────
 console.log('[startup] ANTHROPIC_API_KEY present:', !!process.env.ANTHROPIC_API_KEY);
@@ -38,6 +40,8 @@ app.use(express.json());
 
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
+app.use('/api/portfolio', portfolioRouter);
+app.use('/api/alerts', alertsRouter);
 
 // iOS Safari requires this exact MIME type for the web manifest
 app.get('/site.webmanifest', (req, res) => {
