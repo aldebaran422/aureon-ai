@@ -55,6 +55,48 @@ app.get('/site.webmanifest', (req, res) => {
 
 app.use(express.static(dirname(fileURLToPath(import.meta.url))));
 
+// GET /api/etf — ETF flow data served to the iOS app.
+// Update the values below weekly from farside.co.uk.
+// The iOS app reads lastUpdated to drive its "Data as of …" label.
+app.get('/api/etf', (req, res) => {
+  res.json({
+    lastUpdated: '2026-04-19',
+    btcFlow:  -384_900_000,
+    ethFlow:   -20_300_000,
+    xrpFlow:    14_300_000,
+    btcAUM:  94_000_000_000,
+    ethAUM:   6_800_000_000,
+    xrpAUM:   1_413_300_000,
+    btcRecentFlows: [
+      -108_500_000,
+       462_400_000,
+      -113_300_000,
+      -117_700_000,
+      -384_900_000,
+      -384_900_000,
+      -384_900_000,
+    ],
+    ethRecentFlows: [
+      -133_200_000,
+        26_200_000,
+        89_000_000,
+       -35_000_000,
+       -20_300_000,
+       -20_300_000,
+       -20_300_000,
+    ],
+    xrpRecentFlows: [
+       8_200_000,
+      -2_100_000,
+      15_400_000,
+       6_800_000,
+      -3_200_000,
+      11_700_000,
+      14_300_000,
+    ],
+  });
+});
+
 app.post('/api/assistant', async (req, res) => {
   try {
     console.log('[api/assistant] incoming request:', req.body);

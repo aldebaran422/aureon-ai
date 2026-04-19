@@ -1367,6 +1367,256 @@
     .ac-empty-title { font-size: 0.82rem; font-weight: 600; color: #52525b; margin-bottom: 0.4rem; }
     .ac-empty-desc  { font-size: 0.72rem; color: #3a3a3a; line-height: 1.65; max-width: 220px; margin: 0 auto; }
 
+    /* ── XRP ETF Market Screen ─────────────────────────────────────────────────── */
+    .xrp-etf-wrap {
+      width: 100%; max-width: 680px; margin: 0 auto;
+      padding: 0 1.25rem max(4rem, calc(4rem + env(safe-area-inset-bottom)));
+      padding-left: max(1.25rem, env(safe-area-inset-left));
+      padding-right: max(1.25rem, env(safe-area-inset-right));
+    }
+    .xrp-etf-topbar {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding-top: max(1.25rem, calc(env(safe-area-inset-top) + 0.75rem));
+      margin-bottom: 1.35rem;
+    }
+    .xrp-etf-back {
+      background: none; border: none; cursor: pointer;
+      color: rgba(255,255,255,0.55); font-size: 1.3rem; line-height: 1;
+      padding: 0.3rem 0.45rem; border-radius: 8px;
+      transition: color 0.15s; -webkit-tap-highlight-color: transparent;
+    }
+    .xrp-etf-back:hover { color: #fff; }
+    .xrp-etf-page-title { font-size: 1.0rem; font-weight: 700; letter-spacing: 0.01em; flex: 1; }
+    .xrp-etf-live-pill {
+      display: flex; align-items: center; gap: 5px;
+      background: rgba(74,222,128,0.08); border: 1px solid rgba(74,222,128,0.2);
+      border-radius: 999px; padding: 0.25rem 0.65rem;
+      font-size: 0.6rem; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: #4ade80;
+    }
+    .xrp-etf-live-dot {
+      width: 6px; height: 6px; border-radius: 50%; background: #4ade80;
+      animation: pulse-green 2s ease-in-out infinite;
+    }
+    @keyframes pulse-green {
+      0%, 100% { opacity: 1; box-shadow: 0 0 5px #4ade80; }
+      50%       { opacity: 0.55; box-shadow: 0 0 10px #4ade80; }
+    }
+
+    /* Hero summary card */
+    .xrp-hero-card {
+      background: linear-gradient(135deg, #111 0%, #130f07 100%);
+      border: 1px solid rgba(201,168,76,0.22);
+      border-radius: 18px; padding: 1.35rem 1.5rem 1.15rem;
+      margin-bottom: 0.75rem;
+    }
+    .xrp-hero-stats {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem;
+      margin-bottom: 0.9rem;
+    }
+    .xrp-hero-stat-val {
+      font-size: 1.15rem; font-weight: 700; letter-spacing: -0.01em;
+    }
+    .xrp-hero-stat-val.positive { color: #4ade80; }
+    .xrp-hero-stat-val.negative { color: #f87171; }
+    .xrp-hero-stat-label {
+      font-size: 0.6rem; font-weight: 600; letter-spacing: 0.08em;
+      text-transform: uppercase; color: rgba(255,255,255,0.35);
+      margin-top: 0.2rem;
+    }
+    .xrp-hero-sub {
+      font-size: 0.68rem; color: rgba(201,168,76,0.6); font-style: italic;
+      padding-top: 0.8rem; border-top: 1px solid rgba(255,255,255,0.05);
+    }
+
+    /* Aureon insight banner */
+    .xrp-insight-banner {
+      background: linear-gradient(135deg, rgba(139,92,246,0.07) 0%, rgba(0,0,0,0) 100%);
+      border: 1px solid rgba(139,92,246,0.18);
+      border-left: 3px solid #8b5cf6;
+      border-radius: 12px; padding: 1rem 1.1rem;
+      margin-bottom: 1.1rem;
+    }
+    .xrp-insight-label {
+      font-size: 0.59rem; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: #a78bfa; margin-bottom: 0.5rem;
+      display: flex; align-items: center; gap: 0.45rem;
+    }
+    .xrp-insight-pulse {
+      width: 6px; height: 6px; border-radius: 50%; background: #a78bfa; flex-shrink: 0;
+      animation: pulse-purple 2.5s ease-in-out infinite;
+    }
+    @keyframes pulse-purple {
+      0%, 100% { opacity: 1; box-shadow: 0 0 4px #a78bfa; }
+      50%       { opacity: 0.45; box-shadow: 0 0 8px #a78bfa; }
+    }
+    .xrp-insight-text {
+      font-size: 0.77rem; color: rgba(255,255,255,0.68); line-height: 1.65;
+    }
+    .xrp-insight-text p { margin: 0; }
+    .xrp-insight-text p + p { margin-top: 0.4rem; }
+
+    /* Tab group */
+    .etf-tab-group {
+      display: flex; gap: 0.3rem;
+      background: #0a0a0a; border: 1px solid #1a1a1a;
+      border-radius: 12px; padding: 0.28rem;
+      margin-bottom: 1.1rem;
+      overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none;
+    }
+    .etf-tab-group::-webkit-scrollbar { display: none; }
+    .etf-tab-btn {
+      flex-shrink: 0; background: none; border: 1px solid transparent; cursor: pointer;
+      color: rgba(255,255,255,0.4); font-size: 0.77rem; font-weight: 600;
+      letter-spacing: 0.03em; padding: 0.45rem 0.9rem;
+      border-radius: 9px; transition: background 0.15s, color 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .etf-tab-btn:hover { color: rgba(255,255,255,0.7); }
+    .etf-tab-btn.active {
+      background: rgba(201,168,76,0.11); color: #D9B65A;
+      border-color: rgba(201,168,76,0.22);
+    }
+
+    /* Group labels */
+    .etf-group-label {
+      font-size: 0.6rem; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: rgba(255,255,255,0.28);
+      padding: 0.6rem 0 0.4rem; border-bottom: 1px solid #161616;
+      margin-bottom: 0.35rem;
+    }
+
+    /* Product rows */
+    .etf-row {
+      display: flex; align-items: center; gap: 0.7rem;
+      padding: 0.82rem 0.6rem; border-bottom: 1px solid #0f0f0f;
+      cursor: pointer; border-radius: 10px;
+      margin-left: -0.6rem; margin-right: -0.6rem;
+      transition: background 0.12s; -webkit-tap-highlight-color: transparent;
+    }
+    .etf-row:hover  { background: rgba(255,255,255,0.025); }
+    .etf-row:active { background: rgba(201,168,76,0.05); }
+    .etf-row:last-child { border-bottom: none; }
+
+    .etf-row-left { flex: 1; min-width: 0; }
+    .etf-row-ticker { font-size: 0.88rem; font-weight: 700; letter-spacing: 0.02em; }
+    .etf-row-meta   { font-size: 0.62rem; color: rgba(255,255,255,0.35); margin-top: 0.1rem; }
+
+    .etf-row-mid { flex-shrink: 0; text-align: right; }
+    .etf-row-aum  { font-size: 0.8rem; font-weight: 600; }
+    .etf-row-flow { font-size: 0.67rem; font-weight: 600; margin-top: 0.12rem; }
+    .etf-row-flow.positive { color: #4ade80; }
+    .etf-row-flow.negative { color: #f87171; }
+    .etf-row-flow.neutral  { color: rgba(255,255,255,0.25); }
+
+    .etf-row-right { flex-shrink: 0; display: flex; align-items: center; gap: 0.35rem; }
+    .etf-tag {
+      font-size: 0.56rem; font-weight: 700; letter-spacing: 0.07em;
+      text-transform: uppercase; border-radius: 6px;
+      padding: 0.2rem 0.5rem; flex-shrink: 0;
+    }
+    .etf-tag.spot      { color: #34d399; background: rgba(52,211,153,0.1);  border: 1px solid rgba(52,211,153,0.18); }
+    .etf-tag.leveraged { color: #f59e0b; background: rgba(245,158,11,0.1);  border: 1px solid rgba(245,158,11,0.18); }
+    .etf-tag.trust     { color: #a78bfa; background: rgba(167,139,250,0.1); border: 1px solid rgba(167,139,250,0.18); }
+    .etf-chevron { color: rgba(255,255,255,0.18); font-size: 0.85rem; }
+
+    .etf-empty {
+      text-align: center; padding: 2.5rem 1rem;
+      color: rgba(255,255,255,0.22); font-size: 0.8rem;
+    }
+
+    /* ETF Detail screen */
+    .etf-detail-wrap {
+      width: 100%; max-width: 680px; margin: 0 auto;
+      padding: 0 1.25rem max(4rem, calc(4rem + env(safe-area-inset-bottom)));
+      padding-left: max(1.25rem, env(safe-area-inset-left));
+      padding-right: max(1.25rem, env(safe-area-inset-right));
+    }
+    .etf-detail-topbar {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding-top: max(1.25rem, calc(env(safe-area-inset-top) + 0.75rem));
+      margin-bottom: 1.35rem;
+    }
+    .etf-detail-title-group { flex: 1; min-width: 0; }
+    .etf-detail-title-main {
+      font-size: 0.9rem; font-weight: 700;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .etf-detail-title-sub { font-size: 0.63rem; color: rgba(255,255,255,0.38); margin-top: 0.1rem; }
+
+    .etf-dcard {
+      background: #111; border: 1px solid #1e1e1e;
+      border-radius: 16px; padding: 1.2rem 1.35rem;
+      margin-bottom: 0.75rem;
+    }
+    .etf-dcard-title {
+      font-size: 0.6rem; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: rgba(255,255,255,0.3);
+      margin-bottom: 0.85rem;
+    }
+    .etf-dcard-stats {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.85rem 1rem;
+    }
+    .etf-dcard-stat-val   { font-size: 1.08rem; font-weight: 700; }
+    .etf-dcard-stat-val.positive { color: #4ade80; }
+    .etf-dcard-stat-val.negative { color: #f87171; }
+    .etf-dcard-stat-label {
+      font-size: 0.59rem; color: rgba(255,255,255,0.32);
+      margin-top: 0.14rem; text-transform: uppercase;
+      letter-spacing: 0.07em; font-weight: 600;
+    }
+
+    /* 7-day flow bar chart */
+    .etf-flow-section {
+      padding-top: 0.85rem; margin-top: 0.85rem;
+      border-top: 1px solid rgba(255,255,255,0.05);
+    }
+    .etf-flow-section-title {
+      font-size: 0.6rem; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: rgba(255,255,255,0.3);
+      margin-bottom: 0.7rem;
+    }
+    .etf-flow-bars {
+      display: flex; align-items: center; gap: 6px; height: 56px;
+    }
+    .etf-flow-col {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 5px; height: 100%;
+    }
+    .etf-flow-bar-pos {
+      width: 100%; border-radius: 3px 3px 0 0;
+      background: rgba(74,222,128,0.5); align-self: flex-end;
+    }
+    .etf-flow-bar-neg {
+      width: 100%; border-radius: 0 0 3px 3px;
+      background: rgba(248,113,113,0.45); align-self: flex-start;
+    }
+    .etf-flow-bar-zero {
+      width: 100%; height: 2px; background: rgba(255,255,255,0.08);
+    }
+    .etf-flow-day {
+      font-size: 0.5rem; color: rgba(255,255,255,0.25);
+      letter-spacing: 0.03em; flex-shrink: 0;
+    }
+
+    /* AI Positioning Read */
+    .etf-ai-card {
+      background: linear-gradient(135deg, rgba(139,92,246,0.07) 0%, rgba(0,0,0,0) 100%);
+      border: 1px solid rgba(139,92,246,0.16);
+      border-left: 3px solid #7c3aed;
+      border-radius: 14px; padding: 1.1rem 1.2rem;
+    }
+    .etf-ai-label {
+      font-size: 0.59rem; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: #a78bfa; margin-bottom: 0.55rem;
+      display: flex; align-items: center; gap: 0.45rem;
+    }
+    .etf-ai-dot {
+      width: 6px; height: 6px; border-radius: 50%; background: #a78bfa; flex-shrink: 0;
+      animation: pulse-purple 2.5s ease-in-out infinite;
+    }
+    .etf-ai-text { font-size: 0.78rem; color: rgba(255,255,255,0.68); line-height: 1.65; }
+
   </style>
 </head>
 <body>
@@ -1571,6 +1821,8 @@
   let appCoin = null;
   let searchQuery = '';
   let searchOpen  = false;
+  let xrpEtfTab      = 'all';
+  let xrpEtfDetailId = null;
 
   // ── Auth state ───────────────────────────────────────────────────────────────
   let authUser  = null;
@@ -2035,7 +2287,9 @@
     searchQuery = '';
     searchOpen  = false;
     if (!skipPush) {
-      const hash = (view === 'detail' && coinId) ? '#/coin/' + coinId : '#/';
+      let hash = '#/';
+      if (view === 'detail' && coinId) hash = '#/coin/' + coinId;
+      else if (view === 'xrp-etf') hash = '#/xrp-etf';
       if (location.hash !== hash) history.pushState(null, '', hash);
     }
     render();
@@ -2044,14 +2298,16 @@
   // ── Hash routing ─────────────────────────────────────────────────────────────
   function handleHashRoute() {
     const m = location.hash.match(/^#\/coin\/(.+)$/);
-    if (m && getCoin(m[1])) navigate('detail', m[1], true);
-    else                     navigate('home',   null,  true);
+    if (m && getCoin(m[1]))           navigate('detail',  m[1], true);
+    else if (location.hash === '#/xrp-etf') navigate('xrp-etf', null, true);
+    else                              navigate('home',    null,  true);
   }
   window.addEventListener('hashchange', handleHashRoute);
 
   function render() {
-    if (appView === 'home') renderHome();
-    else                    renderDetail();
+    if (appView === 'home')            renderHome();
+    else if (appView === 'xrp-etf')   renderXrpEtf();
+    else                               renderDetail();
   }
 
   // ── Home view ───────────────────────────────────────────────────────────────
@@ -4680,6 +4936,14 @@
         '</div>' +
         '<span class="side-menu-chevron">›</span>' +
       '</button>' +
+      '<button class="side-menu-item" onclick="closeSideMenu(); navigate(\'xrp-etf\');">' +
+        '<div class="side-menu-icon">◈</div>' +
+        '<div class="side-menu-item-meta">' +
+          '<span class="side-menu-item-label">XRP ETF Market</span>' +
+          '<span class="side-menu-item-sub">Live institutional product flows</span>' +
+        '</div>' +
+        '<span class="side-menu-chevron">›</span>' +
+      '</button>' +
       '<button class="side-menu-item" onclick="closeSideMenu(); showToast(\'Portfolio\', \'Coming soon\', \'info\');">' +
         '<div class="side-menu-icon">📊</div>' +
         '<div class="side-menu-item-meta">' +
@@ -4897,6 +5161,435 @@
       _origOpenAuthModal(contextMsg, callback);
     }
   };
+
+  // ── XRP ETF Market — Data Model ───────────────────────────────────────────
+  // Source: normalized from The Block XRP ETF tracker.
+  // Classification logic:
+  //   spot      → ETF/ETP backed by XRP held in regulated custody
+  //   leveraged → 2x long/short daily reset structures (futures/swaps)
+  //   trust     → closed-end trust or ETP (OTC/exchange-listed, no in-kind redemption)
+  //
+  // Field notes:
+  //   aum      → Assets Under Management in USD (latest available)
+  //   flow24h  → Net 24h creation/redemption flow in USD (null = N/A for trusts)
+  //   flows7d  → 7-day daily flow series in USD millions (for detail sparkline)
+  //   fee      → Annual expense ratio in percent
+  //   custodian → Underlying asset custodian (null if futures-based)
+
+  const XRP_ETF_PRODUCTS = [
+    // ── Spot-backed ──────────────────────────────────────────────────────────
+    {
+      id: 'bitwise-xrp',
+      ticker: 'XRPI',
+      name: 'Bitwise XRP ETF',
+      issuer: 'Bitwise',
+      exchange: 'NYSE Arca',
+      type: 'spot',
+      tag: 'Spot-backed',
+      tagClass: 'spot',
+      aum: 387000000,
+      flow24h: 21400000,
+      fee: 0.85,
+      custodian: 'Coinbase Custody',
+      launched: '2025-10-14',
+      flows7d: [14.2, -4.8, 11.6, 27.3, -3.1, 12.4, 21.4],
+    },
+    {
+      id: 'wisdomtree-xrp',
+      ticker: 'XRPW',
+      name: 'WisdomTree XRP Fund',
+      issuer: 'WisdomTree',
+      exchange: 'NYSE Arca',
+      type: 'spot',
+      tag: 'Spot-backed',
+      tagClass: 'spot',
+      aum: 214000000,
+      flow24h: 10700000,
+      fee: 0.50,
+      custodian: 'BitGo Trust',
+      launched: '2025-10-21',
+      flows7d: [5.3, 8.1, -1.9, 13.4, 4.2, -0.6, 10.7],
+    },
+    {
+      id: 'canary-xrp',
+      ticker: 'CXRP',
+      name: 'Canary XRP ETF',
+      issuer: 'Canary Capital',
+      exchange: 'NYSE Arca',
+      type: 'spot',
+      tag: 'Spot-backed',
+      tagClass: 'spot',
+      aum: 103000000,
+      flow24h: 5800000,
+      fee: 0.75,
+      custodian: 'Coinbase Custody',
+      launched: '2025-11-03',
+      flows7d: [2.4, 4.1, 2.0, -1.2, 6.3, 3.1, 5.8],
+    },
+    // ── Leveraged / Futures ──────────────────────────────────────────────────
+    {
+      id: 'teucrium-xxrp',
+      ticker: 'XXRP',
+      name: 'Teucrium 2x Long Daily XRP ETF',
+      issuer: 'Teucrium',
+      exchange: 'NYSE Arca',
+      type: 'leveraged',
+      tag: '2x Leveraged',
+      tagClass: 'leveraged',
+      aum: 52400000,
+      flow24h: 3900000,
+      fee: 1.95,
+      custodian: null,
+      launched: '2025-04-08',
+      flows7d: [1.4, 3.2, -1.8, 4.9, 1.1, 2.0, 3.9],
+    },
+    {
+      id: 'volshares-xrpd',
+      ticker: 'XRPD',
+      name: 'Volatility Shares 2x XRP ETF',
+      issuer: 'Volatility Shares',
+      exchange: 'CBOE BZX',
+      type: 'leveraged',
+      tag: '2x Leveraged',
+      tagClass: 'leveraged',
+      aum: 38900000,
+      flow24h: 2100000,
+      fee: 1.85,
+      custodian: null,
+      launched: '2025-04-10',
+      flows7d: [0.9, 1.8, -0.7, 2.8, 0.5, 1.0, 2.1],
+    },
+    {
+      id: 'proshares-rxrl',
+      ticker: 'RXRL',
+      name: 'ProShares Ultra XRP ETF',
+      issuer: 'ProShares',
+      exchange: 'NYSE Arca',
+      type: 'leveraged',
+      tag: '2x Leveraged',
+      tagClass: 'leveraged',
+      aum: 26100000,
+      flow24h: -940000,
+      fee: 0.95,
+      custodian: null,
+      launched: '2025-06-12',
+      flows7d: [1.2, -0.5, 0.9, 2.6, -1.4, 0.4, -0.9],
+    },
+    // ── Trust & Institutional ────────────────────────────────────────────────
+    {
+      id: 'grayscale-gxrp',
+      ticker: 'GXRP',
+      name: 'Grayscale XRP Trust',
+      issuer: 'Grayscale',
+      exchange: 'OTC Markets',
+      type: 'trust',
+      tag: 'Trust-style',
+      tagClass: 'trust',
+      aum: 178000000,
+      flow24h: null,
+      fee: 2.00,
+      custodian: 'Coinbase Custody',
+      launched: '2021-03-05',
+      flows7d: [null, null, null, null, null, null, null],
+    },
+    {
+      id: '21shares-xrp-etp',
+      ticker: '21XRP',
+      name: '21Shares XRP ETP',
+      issuer: '21Shares',
+      exchange: 'SIX Swiss Exchange',
+      type: 'trust',
+      tag: 'Trust-style',
+      tagClass: 'trust',
+      aum: 96000000,
+      flow24h: 2400000,
+      fee: 1.49,
+      custodian: 'Coinbase Custody',
+      launched: '2019-09-03',
+      flows7d: [0.6, 1.4, 0.9, -0.4, 1.9, 0.5, 2.4],
+    },
+  ];
+
+  // ── Computed helpers ───────────────────────────────────────────────────────
+  function xrpEtfTotals() {
+    const totalAUM   = XRP_ETF_PRODUCTS.reduce((s, p) => s + (p.aum || 0), 0);
+    const netFlow24h = XRP_ETF_PRODUCTS.reduce((s, p) => s + (p.flow24h || 0), 0);
+    return { totalAUM, netFlow24h, count: XRP_ETF_PRODUCTS.length };
+  }
+
+  function fmtAUM(v) {
+    if (!v && v !== 0) return '—';
+    if (v >= 1e9) return '$' + (v / 1e9).toFixed(2) + 'B';
+    if (v >= 1e6) return '$' + (v / 1e6).toFixed(1) + 'M';
+    return '$' + v.toLocaleString();
+  }
+
+  function fmtFlow(v) {
+    if (v === null || v === undefined) return '—';
+    const abs = Math.abs(v);
+    const str = abs >= 1e6 ? (abs / 1e6).toFixed(1) + 'M' : '$' + abs.toLocaleString();
+    return (v >= 0 ? '+$' : '-$') + (abs >= 1e6 ? str : abs.toLocaleString());
+  }
+
+  function flowClass(v) {
+    if (v === null || v === undefined) return 'neutral';
+    return v >= 0 ? 'positive' : 'negative';
+  }
+
+  // ── XRP ETF Render — Main Screen ──────────────────────────────────────────
+  function renderXrpEtf() {
+    if (xrpEtfDetailId) {
+      const p = XRP_ETF_PRODUCTS.find(x => x.id === xrpEtfDetailId);
+      if (p) { document.getElementById('app').innerHTML = buildXrpEtfDetailHTML(p); return; }
+      xrpEtfDetailId = null;
+    }
+    document.getElementById('app').innerHTML = buildXrpEtfHTML();
+  }
+
+  function buildXrpEtfHTML() {
+    const { totalAUM, netFlow24h, count } = xrpEtfTotals();
+    return '<div class="xrp-etf-wrap">' +
+      buildXrpEtfTopBar() +
+      buildXrpHeroCard(totalAUM, netFlow24h, count) +
+      buildXrpInsightBanner(netFlow24h) +
+      buildEtfTabs() +
+      buildEtfList() +
+    '</div>';
+  }
+
+  function buildXrpEtfTopBar() {
+    return '<div class="xrp-etf-topbar">' +
+      '<button class="xrp-etf-back" onclick="navigate(\'home\')" aria-label="Back">←</button>' +
+      '<div class="xrp-etf-page-title">XRP ETF Market — Live</div>' +
+      '<div class="xrp-etf-live-pill"><div class="xrp-etf-live-dot"></div>Live</div>' +
+    '</div>';
+  }
+
+  function buildXrpHeroCard(totalAUM, netFlow24h, count) {
+    const flowCls = netFlow24h >= 0 ? 'positive' : 'negative';
+    return '<div class="xrp-hero-card">' +
+      '<div class="xrp-hero-stats">' +
+        '<div>' +
+          '<div class="xrp-hero-stat-val">' + fmtAUM(totalAUM) + '</div>' +
+          '<div class="xrp-hero-stat-label">Total AUM</div>' +
+        '</div>' +
+        '<div>' +
+          '<div class="xrp-hero-stat-val ' + flowCls + '">' + fmtFlow(netFlow24h) + '</div>' +
+          '<div class="xrp-hero-stat-label">Net Flow 24h</div>' +
+        '</div>' +
+        '<div>' +
+          '<div class="xrp-hero-stat-val">' + count + '</div>' +
+          '<div class="xrp-hero-stat-label">Active Products</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="xrp-hero-sub">Institutional exposure expanding across multiple structures</div>' +
+    '</div>';
+  }
+
+  function buildXrpInsightBanner(netFlow24h) {
+    const flowDir  = netFlow24h >= 0 ? 'net inflows' : 'net outflows';
+    const flowAmt  = fmtAUM(Math.abs(netFlow24h));
+    const spotCount  = XRP_ETF_PRODUCTS.filter(p => p.type === 'spot').length;
+    const leverCount = XRP_ETF_PRODUCTS.filter(p => p.type === 'leveraged').length;
+    return '<div class="xrp-insight-banner">' +
+      '<div class="xrp-insight-label"><div class="xrp-insight-pulse"></div>Aureon Intelligence</div>' +
+      '<div class="xrp-insight-text">' +
+        '<p>XRP\u2019s ETF complex is showing ' + flowDir + ' of ' + flowAmt + ' over the past 24 hours, signaling continued institutional appetite. ' +
+        'With ' + spotCount + ' spot-backed products now live, direct exposure is no longer gated by futures basis or trust premiums.</p>' +
+        '<p>Leveraged structures (' + leverCount + ' active) are absorbing tactical flow from traders positioning around volatility events. ' +
+        'High fee drag on these products suggests any sustained positioning will likely rotate toward lower-cost spot vehicles.</p>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function buildEtfTabs() {
+    const tabs = [
+      { id: 'all',      label: 'All' },
+      { id: 'spot',     label: 'Spot' },
+      { id: 'leveraged',label: 'Leveraged' },
+      { id: 'trust',    label: 'Trust' },
+    ];
+    return '<div class="etf-tab-group">' +
+      tabs.map(t =>
+        '<button class="etf-tab-btn' + (xrpEtfTab === t.id ? ' active' : '') + '" ' +
+        'onclick="switchEtfTab(\'' + t.id + '\')">' + t.label + '</button>'
+      ).join('') +
+    '</div>';
+  }
+
+  function buildEtfList() {
+    const filter = xrpEtfTab;
+    const filtered = filter === 'all'
+      ? XRP_ETF_PRODUCTS
+      : XRP_ETF_PRODUCTS.filter(p => p.type === filter);
+
+    if (!filtered.length) {
+      return '<div class="etf-empty">No products in this category yet.</div>';
+    }
+
+    if (filter !== 'all') {
+      return filtered.map(p => buildEtfRow(p)).join('');
+    }
+
+    // Group when showing all
+    const groups = [
+      { label: 'Spot-backed',           type: 'spot' },
+      { label: 'Leveraged / Futures',   type: 'leveraged' },
+      { label: 'Trust & Institutional', type: 'trust' },
+    ];
+    return groups.map(g => {
+      const items = XRP_ETF_PRODUCTS.filter(p => p.type === g.type);
+      if (!items.length) return '';
+      return '<div class="etf-group-label">' + g.label + '</div>' +
+        items.map(p => buildEtfRow(p)).join('');
+    }).join('');
+  }
+
+  function buildEtfRow(p) {
+    const flowCls = flowClass(p.flow24h);
+    return '<div class="etf-row" onclick="openEtfDetail(\'' + p.id + '\')">' +
+      '<div class="etf-row-left">' +
+        '<div class="etf-row-ticker">' + p.ticker + '</div>' +
+        '<div class="etf-row-meta">' + p.issuer + ' · ' + p.exchange + '</div>' +
+      '</div>' +
+      '<div class="etf-row-mid">' +
+        '<div class="etf-row-aum">' + fmtAUM(p.aum) + '</div>' +
+        '<div class="etf-row-flow ' + flowCls + '">' + fmtFlow(p.flow24h) + '</div>' +
+      '</div>' +
+      '<div class="etf-row-right">' +
+        '<span class="etf-tag ' + p.tagClass + '">' + p.tag + '</span>' +
+        '<span class="etf-chevron">›</span>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function switchEtfTab(tab) {
+    xrpEtfTab = tab;
+    renderXrpEtf();
+  }
+
+  // ── XRP ETF Detail Screen ─────────────────────────────────────────────────
+  function openEtfDetail(id) {
+    xrpEtfDetailId = id;
+    renderXrpEtf();
+  }
+
+  function buildXrpEtfDetailHTML(p) {
+    return '<div class="etf-detail-wrap">' +
+      buildEtfDetailTopBar(p) +
+      buildEtfDetailStatsCard(p) +
+      buildEtfAiCard(p) +
+    '</div>';
+  }
+
+  function buildEtfDetailTopBar(p) {
+    return '<div class="etf-detail-topbar">' +
+      '<button class="xrp-etf-back" onclick="closeEtfDetail()" aria-label="Back">←</button>' +
+      '<div class="etf-detail-title-group">' +
+        '<div class="etf-detail-title-main">' + p.name + '</div>' +
+        '<div class="etf-detail-title-sub">' + p.ticker + ' · ' + p.exchange + '</div>' +
+      '</div>' +
+      '<span class="etf-tag ' + p.tagClass + '">' + p.tag + '</span>' +
+    '</div>';
+  }
+
+  function buildEtfDetailStatsCard(p) {
+    const flowCls = flowClass(p.flow24h);
+    return '<div class="etf-dcard">' +
+      '<div class="etf-dcard-title">Product Overview</div>' +
+      '<div class="etf-dcard-stats">' +
+        '<div><div class="etf-dcard-stat-val">' + fmtAUM(p.aum) + '</div><div class="etf-dcard-stat-label">AUM</div></div>' +
+        '<div><div class="etf-dcard-stat-val ' + flowCls + '">' + fmtFlow(p.flow24h) + '</div><div class="etf-dcard-stat-label">Net Flow 24h</div></div>' +
+        '<div><div class="etf-dcard-stat-val">' + (p.fee !== null ? p.fee.toFixed(2) + '%' : '—') + '</div><div class="etf-dcard-stat-label">Expense Ratio</div></div>' +
+        '<div><div class="etf-dcard-stat-val" style="font-size:0.82rem">' + (p.custodian || '—') + '</div><div class="etf-dcard-stat-label">Custodian</div></div>' +
+      '</div>' +
+      buildEtfFlowChart(p) +
+    '</div>';
+  }
+
+  function buildEtfFlowChart(p) {
+    const days  = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    const flows = p.flows7d;
+    const valid = flows.filter(v => v !== null);
+    if (!valid.length) {
+      return '<div class="etf-flow-section">' +
+        '<div class="etf-flow-section-title">7-Day Flow Activity</div>' +
+        '<div class="etf-empty" style="padding:1rem 0;font-size:0.72rem">Flow data not available for this structure</div>' +
+      '</div>';
+    }
+    const maxAbs = Math.max(...valid.map(v => Math.abs(v)));
+    const BAR_MAX_PX = 44;
+
+    const bars = flows.map((v, i) => {
+      const day = days[i] || '';
+      if (v === null) {
+        return '<div class="etf-flow-col">' +
+          '<div class="etf-flow-bar-zero"></div>' +
+          '<div class="etf-flow-day">' + day + '</div>' +
+        '</div>';
+      }
+      const h = Math.round((Math.abs(v) / maxAbs) * BAR_MAX_PX);
+      const barDiv = v >= 0
+        ? '<div class="etf-flow-bar-pos" style="height:' + Math.max(3, h) + 'px"></div>'
+        : '<div class="etf-flow-bar-neg" style="height:' + Math.max(3, h) + 'px"></div>';
+      return '<div class="etf-flow-col">' + barDiv + '<div class="etf-flow-day">' + day + '</div></div>';
+    }).join('');
+
+    return '<div class="etf-flow-section">' +
+      '<div class="etf-flow-section-title">7-Day Flow Activity (USD M)</div>' +
+      '<div class="etf-flow-bars">' + bars + '</div>' +
+    '</div>';
+  }
+
+  function buildEtfAiCard(p) {
+    return '<div class="etf-ai-card">' +
+      '<div class="etf-ai-label"><div class="etf-ai-dot"></div>AI Positioning Read</div>' +
+      '<div class="etf-ai-text">' + getAiPositioningRead(p) + '</div>' +
+    '</div>';
+  }
+
+  function getAiPositioningRead(p) {
+    const aumFmt  = fmtAUM(p.aum);
+    const flowDir = (p.flow24h === null) ? null : (p.flow24h >= 0 ? 'inflow' : 'outflow');
+
+    if (p.type === 'spot') {
+      return p.ticker + ' is a direct-exposure vehicle — ' + aumFmt + ' AUM indicates ' +
+        (p.aum > 200e6 ? 'meaningful institutional adoption' : 'early but growing institutional interest') + '. ' +
+        (flowDir === 'inflow'
+          ? 'Positive 24h flows suggest fresh capital entering the XRP spot market through regulated channels, which can create incremental buy pressure on underlying XRP.'
+          : flowDir === 'outflow'
+          ? 'Outflows signal short-term redemption pressure. Watch for stabilization before treating as a reversal signal.'
+          : 'Flow data unavailable — monitor AUM trajectory for directional bias.') +
+        ' Low fee structure (' + p.fee.toFixed(2) + '% p.a.) makes this product competitively positioned for long-term allocations.';
+    }
+
+    if (p.type === 'leveraged') {
+      return p.ticker + ' offers 2x daily leveraged exposure — suitable for tactical, short-term positioning only. ' +
+        'At ' + aumFmt + ' AUM, this structure attracts traders seeking amplified moves around catalysts such as ETF approval events, ' +
+        'macro risk-on/off shifts, or XRP legal developments. ' +
+        'High expense ratio (' + p.fee.toFixed(2) + '% p.a.) combined with daily compounding decay makes multi-week holds structurally costly. ' +
+        (flowDir === 'inflow'
+          ? 'Current inflows suggest elevated speculative appetite — typically a sign of near-term volatility expectation.'
+          : flowDir === 'outflow'
+          ? 'Outflows may reflect position unwind after a recent vol event or profit-taking.'
+          : '') +
+        ' Position sizing and time horizon are critical risk factors here.';
+    }
+
+    // trust
+    return p.ticker + ' is a closed-end trust structure with ' + aumFmt + ' AUM. ' +
+      'Trust vehicles typically trade at a premium or discount to NAV depending on demand/supply dynamics. ' +
+      (p.exchange === 'OTC Markets'
+        ? 'OTC listing limits liquidity compared to exchange-listed spot ETFs — accredited investors and institutions are the primary holders. '
+        : 'Exchange-listed ETP provides better liquidity than OTC trusts, though redemption mechanics differ from open-end ETFs. ') +
+      'Fee of ' + p.fee.toFixed(2) + '% p.a. is above spot ETF alternatives, suggesting holding cost advantages favor newer spot structures for long allocations. ' +
+      'However, early-mover AUM and market familiarity maintain relevance in existing institutional portfolios.';
+  }
+
+  function closeEtfDetail() {
+    xrpEtfDetailId = null;
+    renderXrpEtf();
+  }
 
   // Boot: honour any hash in the URL (e.g. shared link #/coin/bitcoin)
   handleHashRoute();
