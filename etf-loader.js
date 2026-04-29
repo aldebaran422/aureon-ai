@@ -92,10 +92,11 @@ export async function refreshEtfData() {
     console.warn('[ETF loader] ⚠️  using fallback etf-data.js');
   }
 
-  const ts = new Date().toISOString().split('T')[0];
-  etfState.payload = { ...raw, lastUpdated: ts };
+  // Use lastUpdated from the source data as-is — do not overwrite with today's date.
+  // The iOS app compares this value to today to determine freshness label.
+  etfState.payload = { ...raw };
   etfState.source  = src;
-  console.log(`[ETF loader] ✅ refreshed — source: ${src}, lastUpdated: ${ts}`);
+  console.log(`[ETF loader] ✅ refreshed — source: ${src}, lastUpdated: ${raw.lastUpdated}`);
 }
 
 // Initial load at module startup
