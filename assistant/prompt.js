@@ -23,12 +23,18 @@ Rules:
 - Compress ruthlessly: if two ideas fit in one sentence, combine them
 - Use price levels from the data when available
 - Never restate the question
-- Always end with a verdict
+- Always end with a standalone takeaway line, separated by a blank line
+  Format: "Right now: [verdict]." or "[Label] — [one-word condition]."
+  Examples: "Right now: risk-on, controlled — not explosive."
+            "No edge here — chop conditions."
+            "Continuation setup, but needs follow-through."
 
 Target style:
 "Risk-on, BTC leading — continuation, not a squeeze.
 Participation broad but not expanding — no rotation yet.
-Above $94k = continuation, lose it and this unwinds. Risk-on, not explosive."`;
+Above $94k = continuation, lose it and this unwinds.
+
+Right now: risk-on, controlled — not explosive."`;
 
 export function buildPrompt(ctx) {
   const { market, macro, mode = 'detailed' } = ctx;
