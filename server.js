@@ -77,15 +77,17 @@ app.get('/site.webmanifest', (req, res) => {
 app.use(express.static(dirname(fileURLToPath(import.meta.url))));
 
 app.post('/api/assistant', async (req, res) => {
+  console.log('[api/assistant] HIT');
   const question = req.body?.question ?? '(no question)';
-  console.log('[api/assistant] incoming — question:', question.slice(0, 120));
+  console.log('[api/assistant] question:', question.slice(0, 120));
 
   try {
     const validationError = validate(req.body);
     if (validationError) {
       console.warn('[api/assistant] validation error:', validationError);
-      // Return 200 so iOS validateResponse never blocks the message from being read
-      return res.json({ response: 'Invalid request: ' + validationError });
+      const response = 'Invalid request: ' + validationError;
+      console.log('[api/assistant] returning:', response);
+      return res.json({ response });
     }
 
     const ctx          = buildContext(req.body);
@@ -93,7 +95,7 @@ app.post('/api/assistant', async (req, res) => {
 
     const { text, model } = await callModel({ systemPrompt, messages: ctx.history, market: ctx.market, mode: ctx.mode });
     const response = text || 'Aureon AI temporarily unavailable.';
-    console.log('[api/assistant] success — model:', model, 'chars:', response.length);
+    console.log('[api/assistant] returning:', response.slice(0, 120));
 
     res.json({
       response,
@@ -101,8 +103,9 @@ app.post('/api/assistant', async (req, res) => {
     });
   } catch (err) {
     console.error('[api/assistant] error:', err?.message ?? err);
-    // Always return 200 + response key so iOS parser receives the fallback message
-    res.json({ response: 'Aureon AI temporarily unavailable.' });
+    const response = 'Aureon AI temporarily unavailable.';
+    console.log('[api/assistant] returning fallback:', response);
+    res.json({ response });
   }
 });
 
