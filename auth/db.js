@@ -3,13 +3,22 @@ import { mkdirSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
-const dir    = dirname(fileURLToPath(import.meta.url));
-const dbPath = process.env.DATABASE_PATH || join(dir, '..', 'aureon.db');
+const dir         = dirname(fileURLToPath(import.meta.url));
+const defaultPath = join(dir, '..', 'aureon.db');
+let   dbPath      = process.env.DATABASE_PATH || defaultPath;
 
-// Ensure the directory exists before opening the database.
-// Required on Railway when DATABASE_PATH points to a volume mount (e.g. /data/aureon.db)
-// that may not have been provisioned yet on first deploy.
-mkdirSync(dirname(dbPath), { recursive: true });
+// Ensure the parent directory exists (needed when DATABASE_PATH points at a volume mount).
+// If the directory can't be created (e.g. /data on Render Free without a Disk provisioned),
+// fall back to the project-root default so the server keeps running.
+if (dbPath !== defaultPath) {
+  try {
+    mkdirSync(dirname(dbPath), { recursive: true });
+  } catch (e) {
+    console.warn('[db] Cannot create directory for DATABASE_PATH:', dirname(dbPath), '—', e.message);
+    console.warn('[db] Falling back to default path:', defaultPath);
+    dbPath = defaultPath;
+  }
+}
 
 const db = new Database(dbPath);
 
