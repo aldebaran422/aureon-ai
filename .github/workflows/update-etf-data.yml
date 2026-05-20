@@ -1,0 +1,40 @@
+name: Update ETF Data
+
+on:
+  schedule:
+    # 11 PM UTC weekdays — after US market close + data propagation delay
+    - cron: '0 23 * * 1-5'
+  workflow_dispatch:  # allow manual trigger from GitHub UI
+
+jobs:
+  update-etf-data:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # needed to push the updated JSON
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install yfinance --quiet
+
+      - name: Fetch ETF data
+        run: python scripts/fetch-etf-data.py
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet latest-etf-data.json; then
+            echo "No changes — data already current."
+          else
+            git add latest-etf-data.json
+            git commit -m "chore: update ETF data $(date -u +%Y-%m-%d)"
+            git push
+          fi
