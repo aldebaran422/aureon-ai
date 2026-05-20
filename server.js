@@ -47,6 +47,10 @@ setInterval(async () => {
   await refreshEtfData();
 }, ETF_REFRESH_MS).unref(); // .unref() so the interval never blocks process exit
 
+// Rate-limit tracker for POST /api/etf/refresh — avoids hammering CoinGlass
+let lastForceRefreshMs = 0;
+const FORCE_REFRESH_RATE_LIMIT_MS = 5 * 60 * 1000; // 5 minutes
+
 // Load .env for local development only.
 // On Railway/Render, env vars are injected natively — no .env file exists there.
 const envFile = new URL('.env', import.meta.url).pathname;
@@ -65,28 +69,19 @@ app.use('/api/alerts', alertsRouter);
 app.use('/api/conversations', conversationsRouter);
 app.use('/api/predict', predictRouter);
 
-// GET /api/etf — ETF flow data served to the iOS app.
-// Data source is resolved at startup by etf-loader.js (priority: remote URL → latest-etf-data.json → etf-data.js).
-// To update without a code change: edit latest-etf-data.json and git push.
-app.get('/api/etf', (req, res) => {
+// Shared helper — builds the /api/etf response body from current etfState.
+function buildEtfResponse(extra = {}) {
   const { payload, source } = etfState;
-
-  // Compute staleness metadata so the iOS client can display accurate freshness labels
-  // without needing to guess based on lastUpdated alone.
-  const ageMs     = payload.lastUpdated ? Date.now() - new Date(payload.lastUpdated).getTime() : null;
-  const ageDays   = ageMs != null ? Math.floor(ageMs / 86_400_000) : null;
-  const isStale   = ageDays != null && ageDays > 3;
-  const staleReason = source === 'coinglass-live'
+  const ageMs   = payload.lastUpdated ? Date.now() - new Date(payload.lastUpdated).getTime() : null;
+  const ageDays = ageMs != null ? Math.floor(ageMs / 86_400_000) : null;
+  const isStale = ageDays != null && ageDays > 3;
+  const staleReason = (source === 'coinglass-live' || source === 'remote-url')
     ? null
-    : source === 'remote-url'
-      ? null
-      : source === 'latest-file'
-        ? 'Serving committed file — update latest-etf-data.json and git push, or set COINGLASS_API_KEY for live data'
-        : 'Serving hardcoded fallback — no live source or committed file is current';
+    : source === 'latest-file'
+      ? 'Serving committed file — update latest-etf-data.json and git push, or set COINGLASS_API_KEY for live data'
+      : 'Serving hardcoded fallback — no live source or committed file is current';
 
-  console.log(`[/api/etf] source: ${source}, lastUpdated: ${payload.lastUpdated}, ageDays: ${ageDays ?? '?'}, isStale: ${isStale}`);
-
-  res.json({
+  return {
     ...payload,
     _meta: {
       source,
@@ -94,8 +89,45 @@ app.get('/api/etf', (req, res) => {
       ageDays,
       staleReason: isStale ? staleReason : null,
       servedAt: new Date().toISOString(),
+      ...extra,
     },
-  });
+  };
+}
+
+// GET /api/etf — ETF flow data served to the iOS app.
+// Returns cached state from the last successful refreshEtfData() call.
+// To trigger a server-side re-fetch, use POST /api/etf/refresh instead.
+app.get('/api/etf', (req, res) => {
+  const body = buildEtfResponse();
+  console.log(`[/api/etf GET] source: ${body._meta.source}, lastUpdated: ${etfState.payload.lastUpdated}, ageDays: ${body._meta.ageDays ?? '?'}, isStale: ${body._meta.isStale}`);
+  res.json(body);
+});
+
+// POST /api/etf/refresh — forces server-side ETF data reload from the live source chain.
+// Rate-limited to once every 5 minutes to avoid hammering CoinGlass.
+// Returns same shape as GET /api/etf plus refreshResult metadata.
+app.post('/api/etf/refresh', async (req, res) => {
+  const now = Date.now();
+  const msSinceLastRefresh = now - lastForceRefreshMs;
+
+  if (msSinceLastRefresh < FORCE_REFRESH_RATE_LIMIT_MS) {
+    const retrySec = Math.ceil((FORCE_REFRESH_RATE_LIMIT_MS - msSinceLastRefresh) / 1000);
+    console.log(`[/api/etf/refresh] rate-limited — retry in ${retrySec}s`);
+    return res.json(buildEtfResponse({ refreshResult: 'rate-limited', retryAfterSeconds: retrySec }));
+  }
+
+  lastForceRefreshMs = now;
+  const prevLastUpdated = etfState.payload?.lastUpdated;
+  console.log(`[/api/etf/refresh] force-refresh triggered — prevLastUpdated: ${prevLastUpdated}`);
+
+  await refreshEtfData();
+
+  const newLastUpdated = etfState.payload?.lastUpdated;
+  const dataChanged    = newLastUpdated !== prevLastUpdated;
+  const refreshResult  = dataChanged ? 'updated' : 'unchanged';
+  console.log(`[/api/etf/refresh] complete — source: ${etfState.source}, lastUpdated: ${newLastUpdated}, result: ${refreshResult}`);
+
+  res.json(buildEtfResponse({ refreshResult, prevLastUpdated, dataChanged }));
 });
 
 // iOS Safari requires this exact MIME type for the web manifest
