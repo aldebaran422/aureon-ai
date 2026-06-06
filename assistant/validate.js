@@ -11,8 +11,8 @@ export function validate(body) {
   if (typeof body.question !== 'string' || !body.question.trim()) {
     return 'question is required and must be a non-empty string.';
   }
-  if (body.question.trim().length > 1000) {
-    return 'question must be 1000 characters or fewer.';
+  if (body.question.trim().length > 2500) {
+    return 'question must be 2500 characters or fewer.';
   }
   if (body.history !== undefined && !Array.isArray(body.history)) {
     return 'history must be an array.';

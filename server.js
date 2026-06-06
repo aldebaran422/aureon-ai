@@ -16,6 +16,7 @@ import { buildContext } from './assistant/context.js';
 import { buildPrompt }  from './assistant/prompt.js';
 import { callModel }    from './assistant/model.js';
 import { etfState, refreshEtfData } from './etf-loader.js';
+import { dbPath }       from './auth/db.js';
 import authRoutes       from './auth/routes.js';
 import userRoutes       from './user/routes.js';
 import portfolioRouter  from './portfolio/routes.js';
@@ -28,7 +29,11 @@ const apiKeyPresent = !!process.env.ANTHROPIC_API_KEY;
 console.log('[startup] ANTHROPIC_API_KEY present:', apiKeyPresent);
 if (!apiKeyPresent) console.error('[startup] ⚠️  ANTHROPIC_API_KEY missing — /api/assistant will return fallback on every call');
 console.log('[startup] JWT_SECRET present:        ', !!process.env.JWT_SECRET);
-console.log('[startup] DATABASE_PATH:             ', process.env.DATABASE_PATH || '(not set — using local aureon.db)');
+console.log('[startup] DATABASE_PATH env:         ', process.env.DATABASE_PATH || '(not set)');
+console.log('[startup] DATABASE_PATH resolved:    ', dbPath);
+if (process.env.DATABASE_PATH && dbPath !== process.env.DATABASE_PATH) {
+  console.error('[startup] ❌ DATABASE_PATH could not be used — fell back to ephemeral local path. Sessions will be lost on redeploy.');
+}
 console.log('[startup] EMAIL_FROM:                ', process.env.EMAIL_FROM    || '(not set — using Aureon <onboarding@resend.dev>)');
 console.log('[startup] RESEND_API_KEY present:    ', !!process.env.RESEND_API_KEY);
 if (!process.env.RESEND_API_KEY && process.env.RENDER) {
@@ -37,6 +42,8 @@ if (!process.env.RESEND_API_KEY && process.env.RENDER) {
 if (process.env.RESEND_API_KEY && !process.env.EMAIL_FROM) {
   console.warn('[startup] ⚠️  EMAIL_FROM not set — using onboarding@resend.dev (Resend sandbox domain). Set EMAIL_FROM to a verified custom domain for production delivery.');
 }
+const verificationEnforced = process.env.REQUIRE_EMAIL_VERIFICATION === 'true';
+console.log('[startup] REQUIRE_EMAIL_VERIFICATION:', verificationEnforced ? 'enabled' : 'disabled (bypass active — set to "true" to enforce in production)');
 console.log('[startup] ETF data source:           ', etfState.source);
 console.log('[startup] ETF lastUpdated:           ', etfState.payload?.lastUpdated);
 console.log('[startup] COINGLASS_API_KEY present: ', !!process.env.COINGLASS_API_KEY);
