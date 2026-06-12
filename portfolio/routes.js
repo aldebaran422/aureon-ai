@@ -53,11 +53,12 @@ router.post('/', requireAuth, (req, res) => {
     return res.status(400).json({ error: 'entryPrice must be a positive number', received: String(entryPrice) });
   }
 
-  // Confirm user exists — belt-and-suspenders even though requireAuth already checks
+  // Confirm user exists — requireAuth auto-restores from JWT when email claim is present,
+  // so this only fires for old tokens (no email in JWT) after an ephemeral DB restart.
   const userRow = db.prepare('SELECT id, email FROM users WHERE id = ?').get(req.userId);
   console.log('[portfolio POST] user exists:', !!userRow, '| userId:', req.userId, userRow ? `(${userRow.email})` : '(NOT FOUND)');
   if (!userRow) {
-    return res.status(401).json({ error: 'Session expired. Please sign in again.' });
+    return res.status(401).json({ error: 'Your session has expired. Please sign out and sign back in.' });
   }
 
   const now          = Date.now();

@@ -13,12 +13,11 @@ function sign(header, payload) {
   return `${data}.${sig}`;
 }
 
-export function createToken(userId) {
-  const now = Math.floor(Date.now() / 1000);
-  return sign(
-    { alg: 'HS256', typ: 'JWT' },
-    { sub: String(userId), iat: now, exp: now + TTL }
-  );
+export function createToken(userId, email = null) {
+  const now     = Math.floor(Date.now() / 1000);
+  const payload = { sub: String(userId), iat: now, exp: now + TTL };
+  if (email) payload.email = email;
+  return sign({ alg: 'HS256', typ: 'JWT' }, payload);
 }
 
 export function verifyToken(token) {

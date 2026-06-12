@@ -38,9 +38,31 @@ router.post('/signup', async (req, res) => {
   if (!validEmail(email))   return res.status(400).json({ error: 'Invalid email address' });
   if (password.length < 8)  return res.status(400).json({ error: 'Password must be at least 8 characters' });
 
-  const normalized = email.trim().toLowerCase();
-  if (db.prepare('SELECT id FROM users WHERE email = ?').get(normalized)) {
-    return res.status(409).json({ error: 'An account with that email already exists' });
+  const normalized    = email.trim().toLowerCase();
+  const existingUser  = db.prepare('SELECT id, password_hash FROM users WHERE email = ?').get(normalized);
+
+  if (existingUser) {
+    if (existingUser.password_hash !== 'restored') {
+      return res.status(409).json({ error: 'An account with that email already exists' });
+    }
+    // Reclaim a stub account that was auto-restored after an ephemeral DB restart.
+    // Update the password while keeping the same user_id so portfolio holdings are preserved.
+    const reclaimSalt  = randomBytes(16).toString('hex');
+    const reclaimHash  = hashPassword(password, reclaimSalt);
+    const reclaimToken = randomBytes(32).toString('hex');
+    const reclaimExp   = Date.now() + TOKEN_TTL_MS;
+    db.prepare(
+      `UPDATE users
+         SET password_hash = ?, salt = ?, verification_token = ?,
+             verification_token_expires = ?, verified = 0, verified_at = NULL
+       WHERE email = ?`
+    ).run(reclaimHash, reclaimSalt, reclaimToken, reclaimExp, normalized);
+    const reclaimedUser = db.prepare('SELECT * FROM users WHERE email = ?').get(normalized);
+    sendVerificationEmail({ to: normalized, token: reclaimToken, baseUrl: getBaseUrl(req) })
+      .catch(err => console.error('[signup] Reclaim email send error:', err));
+    const jwtToken = createToken(reclaimedUser.id, normalized);
+    console.log('[signup] Reclaimed restored account — userId:', reclaimedUser.id, 'email:', normalized);
+    return res.json({ token: jwtToken, user: safeUser(reclaimedUser) });
   }
 
   const salt               = randomBytes(16).toString('hex');
@@ -61,7 +83,7 @@ router.post('/signup', async (req, res) => {
   sendVerificationEmail({ to: normalized, token: verification_token, baseUrl: getBaseUrl(req) })
     .catch(err => console.error('[signup] Email send error:', err));
 
-  const token = createToken(user.id);
+  const token = createToken(user.id, normalized);
   res.json({ token, user: safeUser(user) });
 });
 
@@ -74,13 +96,22 @@ router.post('/login', (req, res) => {
   const user       = db.prepare('SELECT * FROM users WHERE email = ?').get(normalized);
   if (!user) return res.status(401).json({ error: 'Invalid email or password' });
 
+  // Accounts auto-restored after a DB wipe have no real password. Guide the user to
+  // Sign Up (reclaim) which updates the password and preserves their holdings.
+  if (user.password_hash === 'restored') {
+    return res.status(401).json({
+      error: 'Your account was reset — please use "Create Account" with your email to restore access.',
+      code:  'ACCOUNT_RESTORED',
+    });
+  }
+
   const hash = hashPassword(password, user.salt);
   try {
     const match = timingSafeEqual(Buffer.from(hash), Buffer.from(user.password_hash));
     if (!match) return res.status(401).json({ error: 'Invalid email or password' });
   } catch { return res.status(401).json({ error: 'Invalid email or password' }); }
 
-  const token = createToken(user.id);
+  const token = createToken(user.id, user.email);
   res.json({ token, user: safeUser(user) });
 });
 
